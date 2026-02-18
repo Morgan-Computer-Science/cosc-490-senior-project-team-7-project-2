@@ -6,52 +6,58 @@
 <!-- READ ME : PROJECT  -->
 
 <h1>SENTINEL</h1>
-<p><strong>Presidential Decision Support System</strong><br/>
-Simulation Project for Educational Use</p>
+<p>
+  <strong>Presidential Decision Support System</strong><br/>
+  Simulation Project for Educational Use
+</p>
 
 <hr/>
 
 <h2>Overview</h2>
 <p>
-SENTINEL is a multi-agent AI decision support system designed to assist executive-level
-decision making. The system synthesizes analysis across multiple national interest domains
-and produces structured decision memoranda that present policy options, tradeoffs, risks,
-and recommendations.
+SENTINEL is a multi-agent AI decision support system designed to assist
+executive-level decision making. The system synthesizes analysis across
+multiple national interest domains and produces structured decision memoranda
+that present policy options, tradeoffs, risks, and recommendations.
 </p>
 
 <p>
-SENTINEL is advisory by design. It does not make decisions or issue directives. Authority
+SENTINEL is advisory by design. It does not make decisions, issue directives,
+or replace institutional authority. Final decision-making responsibility
 remains with the human decision maker.
 </p>
 
 <p>
 <strong>Disclaimer:</strong><br/>
-This project is a fictional simulation created solely for academic and research purposes.
-It does not represent any real government system, policy, or authority.
+This project is a fictional simulation created solely for academic and research
+purposes. It does not represent any real government system, policy, or authority.
 </p>
 
 <hr/>
 
-<h2>Project Goals</h2>
+<h2>Project Objectives</h2>
 <ul>
   <li>Model traditional executive decision-making workflows using AI agents</li>
-  <li>Explore multi-agent orchestration and conflict resolution</li>
-  <li>Design a human-centered interface for high-stakes decisions</li>
-  <li>Improve transparency, consistency, and traceability in advisory systems</li>
+  <li>Explore multi-agent orchestration and coordination</li>
+  <li>Design a human-centered interface for high-stakes decision contexts</li>
+  <li>Improve transparency, traceability, and consistency in advisory systems</li>
+  <li>Demonstrate responsible AI use in governance-oriented scenarios</li>
 </ul>
 
 <hr/>
 
 <h2>System Concept</h2>
 <p>
-High-level executive decisions are traditionally informed through layered staff coordination,
-agency input, and structured decision memoranda. SENTINEL digitally models this process
-using coordinated AI agents that emulate advisory roles while preserving human authority.
+High-level executive decisions are traditionally informed through layered staff
+coordination, agency input, and structured decision memoranda. SENTINEL models
+this process digitally using coordinated AI agents that emulate advisory roles
+while preserving human authority.
 </p>
 
 <p>
-The primary system output is a <strong>Draft Response</strong>, a structured decision memo equivalent
-to what a President would review prior to making a final decision.
+The primary system output is a <strong>Draft Response</strong>, a structured
+decision memo equivalent to what a President would review prior to making a
+final decision.
 </p>
 
 <hr/>
@@ -63,8 +69,8 @@ to what a President would review prior to making a final decision.
   <li>A policy question is introduced into the system</li>
   <li>SENTINEL classifies the decision context</li>
   <li>Relevant advisory agents are activated</li>
-  <li>Agents analyze independently within domain boundaries</li>
-  <li>Conflicts, risks, and uncertainties are surfaced</li>
+  <li>Agents analyze the issue independently within domain boundaries</li>
+  <li>Conflicts, risks, and uncertainties are identified</li>
   <li>A Draft Response is assembled for executive review</li>
 </ol>
 
@@ -75,7 +81,7 @@ to what a President would review prior to making a final decision.
 <h3>Top-Level Agents</h3>
 <p>
 Each top-level agent represents a core national interest domain and contributes
-domain-specific analysis.
+domain-specific analysis to the final decision memo.
 </p>
 
 <ul>
@@ -93,8 +99,8 @@ domain-specific analysis.
 
 <h3>Shared Sub-Agent Structure</h3>
 <p>
-Each top-level agent is internally composed of layered sub-agents to ensure depth,
-realism, and accountability.
+Each top-level agent is internally composed of layered sub-agents to ensure
+depth, realism, and accountability.
 </p>
 
 <ul>
@@ -113,7 +119,8 @@ realism, and accountability.
 
 <h3>Presidential View</h3>
 <p>
-A minimal, decision-focused interface designed for rapid comprehension under time pressure.
+A minimal, decision-focused interface designed for rapid comprehension under
+time pressure.
 </p>
 
 <ul>
@@ -126,13 +133,13 @@ A minimal, decision-focused interface designed for rapid comprehension under tim
 
 <h3>Analyst View (Conceptual)</h3>
 <p>
-An internal perspective used for transparency and system oversight.
+An internal perspective used for transparency, validation, and system oversight.
 </p>
 
 <ul>
   <li>Agent outputs and assumptions</li>
-  <li>Source inspection</li>
-  <li>Conflict resolution</li>
+  <li>Source inspection and traceability</li>
+  <li>Conflict identification and resolution</li>
   <li>System confidence monitoring</li>
 </ul>
 
@@ -160,7 +167,7 @@ The Draft Response is the central artifact produced by SENTINEL.
 
 <h3>Milestone 1: Research and Mockup Design</h3>
 <ul>
-  <li>Study traditional presidential decision-making workflows</li>
+  <li>Study traditional executive decision-making workflows</li>
   <li>Analyze advisory structures and policy memo formats</li>
   <li>Define system scope and agent responsibilities</li>
   <li>Design low-fidelity and high-fidelity UI mockups</li>
@@ -170,43 +177,81 @@ The Draft Response is the central artifact produced by SENTINEL.
 <h3>Milestone 2: Agent Architecture Design</h3>
 <ul>
   <li>Define top-level and sub-agent responsibilities</li>
-  <li>Design agent orchestration logic</li>
+  <li>Design agent orchestration and routing logic</li>
   <li>Establish conflict detection and resolution strategies</li>
 </ul>
 
-<h3>Milestone 3: Draft Response Generation</h3>
+<h3>Milestone 3: Draft Response Assembly</h3>
 <ul>
-  <li>Implement structured decision memo templates</li>
-  <li>Integrate multi-agent outputs into a single response</li>
-  <li>Surface risks, tradeoffs, and uncertainty explicitly</li>
+  <li>Design structured decision memo templates</li>
+  <li>Integrate multi-agent outputs into a unified response</li>
+  <li>Surface tradeoffs, risks, and uncertainty explicitly</li>
 </ul>
 
-<h3>Milestone 4: Governance and Safety Mechanisms</h3>
+<h3>Milestone 4: Governance and Safety Controls</h3>
 <ul>
   <li>Legal and authority constraint enforcement</li>
-  <li>Red team analysis integration</li>
+  <li>Red team challenge integration</li>
   <li>Transparency and traceability mechanisms</li>
 </ul>
 
 <h3>Milestone 5: System Evaluation and Refinement</h3>
 <ul>
   <li>Scenario-based testing</li>
-  <li>Consistency and coherence evaluation</li>
-  <li>User-centered review and iteration</li>
+  <li>Consistency and coherence review</li>
+  <li>User-centered iteration and refinement</li>
 </ul>
 
 <hr/>
 
-<h2>Technology Context</h2>
+<h2>Technology Stack</h2>
+
 <p>
-SENTINEL is conceptually designed around modern AI agent orchestration principles,
-including large language models, structured prompts, and tool-assisted reasoning.
-The system emphasizes human-centered decision support rather than automation.
+SENTINEL is designed using a layered technology stack that reflects modern
+AI-driven decision support systems. The architecture separates user experience,
+agent orchestration, model reasoning, data grounding, and governance.
 </p>
+
+<h3>Interface Layer</h3>
+<ul>
+  <li>Web-based user interface</li>
+  <li>Role-based views for Presidential and Analyst users</li>
+  <li>Minimal, low-cognitive-load design for high-stakes decisions</li>
+</ul>
+
+<h3>Orchestration Layer</h3>
+<ul>
+  <li>Python-based coordination service</li>
+  <li>Intent classification and agent routing</li>
+  <li>Multi-agent execution management</li>
+  <li>Conflict detection and Draft Response assembly</li>
+</ul>
+
+<h3>Agent and Model Layer</h3>
+<ul>
+  <li>Large language models for reasoning and synthesis</li>
+  <li>Multi-agent architecture with domain specialization</li>
+  <li>Structured prompts and tool-assisted reasoning</li>
+</ul>
+
+<h3>Data Grounding and Knowledge Layer</h3>
+<ul>
+  <li>Trusted source whitelisting</li>
+  <li>Retrieval-augmented generation principles</li>
+  <li>Structured and unstructured knowledge integration</li>
+</ul>
+
+<h3>Governance and Observability</h3>
+<ul>
+  <li>Auditability of Draft Responses</li>
+  <li>Source traceability</li>
+  <li>Explicit uncertainty and disagreement reporting</li>
+</ul>
 
 <hr/>
 
 <h2>Author</h2>
 <p>
-Team 7: Amyra Harry, Elijah Ballou, Daniel Onyejiekwe, Jaden Reeves
+Developed as an academic project exploring AI-assisted governance,
+multi-agent systems, and executive decision support.
 </p>
