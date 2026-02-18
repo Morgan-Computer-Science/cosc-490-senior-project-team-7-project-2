@@ -1,141 +1,114 @@
 <hr/>
 
-<h2>Milestone 1 Layout: Research & Mockup Design</h2>
+<h2>Milestone 1: Research and Mockup Design</h2>
+
 <p>
-Milestone 1 establishes SENTINEL’s problem framing, user experience requirements, and validated UI direction.
-All mockups, wireframes, and interaction flows are created in
-<img alt="Figma" src="https://img.shields.io/badge/Figma-F24E1E?logo=figma&logoColor=white"/> <strong>Figma</strong>.
-Deliverables focus on research-backed design decisions and a complete mockup package for the Presidential View.
+Milestone 1 focuses on grounding the SENTINEL system in real-world executive
+decision-making practices and translating those findings into validated interface
+mockups and interaction flows. All wireframes, high-fidelity mockups, and interaction
+prototypes are produced in
+<img alt="Figma" src="https://img.shields.io/badge/Figma-F24E1E?logo=figma&logoColor=white"/>
+<strong>Figma</strong>.
 </p>
 
-<h3>1.1 Research Plan</h3>
+<hr/>
+
+<h3>1.1 Research Objectives</h3>
 <ul>
-  <li><strong>Goal:</strong> Identify how executive decisions are traditionally briefed and translate that workflow into a digital decision support UX.</li>
-  <li><strong>Inputs:</strong> Decision memo conventions, briefing structures, role responsibilities, and time-pressure constraints.</li>
-  <li><strong>Outputs:</strong> UX requirements, information architecture, and interaction patterns aligned to executive decision contexts.</li>
+  <li>Understand how presidential and executive decisions are traditionally supported</li>
+  <li>Identify the role of software systems versus human coordination</li>
+  <li>Determine gaps between existing tools and executive-level decision needs</li>
+  <li>Translate findings into a decision-first, low-cognitive-load interface design</li>
 </ul>
 
-<h3>1.2 Stakeholders and Personas</h3>
-<table>
-  <thead>
-    <tr>
-      <th align="left">Persona</th>
-      <th align="left">Primary Need</th>
-      <th align="left">Key Constraints</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>President</strong></td>
-      <td>Fast option comparison and clear recommendation</td>
-      <td>Minimal time, minimal cognitive load, high accountability</td>
-    </tr>
-    <tr>
-      <td><strong>Chief of Staff</strong></td>
-      <td>Prioritization and decision readiness</td>
-      <td>Multiple parallel issues, schedule pressure</td>
-    </tr>
-    <tr>
-      <td><strong>National Security Advisor</strong></td>
-      <td>Risk framing and escalation awareness</td>
-      <td>Uncertainty, time sensitivity, operational constraints</td>
-    </tr>
-    <tr>
-      <td><strong>Policy Analyst</strong></td>
-      <td>Traceability and conflict resolution</td>
-      <td>Needs sources, assumptions, and comparable outputs</td>
-    </tr>
-  </tbody>
-</table>
+<hr/>
 
-<h3>1.3 UX Requirements and Success Criteria</h3>
-<ul>
-  <li><strong>R1: Decision-First Layout</strong> — Home screen highlights the active Draft Response and three options with risk signals.</li>
-  <li><strong>R2: Progressive Disclosure</strong> — Detail panels (evidence, disagreement, risk depth) remain collapsed unless expanded.</li>
-  <li><strong>R3: Consistent Memo Format</strong> — Draft Response follows a fixed structure for quick comprehension.</li>
-  <li><strong>R4: Role-Based Views</strong> — Presidential View is minimal; Analyst View includes traceability and diagnostics.</li>
-  <li><strong>R5: Trust Indicators</strong> — Data freshness, confidence, and disagreement are visible at-a-glance.</li>
-</ul>
+<h3>1.2 Research Findings: Executive Decision Support Landscape</h3>
 
-<h3>1.4 Information Architecture</h3>
-<ul>
-  <li><strong>Home</strong> — Active Draft Response, priority alerts, quick entry for new decisions</li>
-  <li><strong>Decision Brief</strong> — Options A/B/C, recommendation, risks, legal constraints</li>
-  <li><strong>What-If</strong> — Scenario toggles and sensitivity outputs</li>
-  <li><strong>History</strong> — Versioned memos and decision threads</li>
-  <li><strong>Analyst Panel</strong> — Agent outputs, assumptions, sources, conflict matrix</li>
-</ul>
-
-<h3>1.5 Figma Deliverables</h3>
 <p>
-All artifacts below are produced in
-<img alt="Figma" src="https://img.shields.io/badge/Figma-F24E1E?logo=figma&logoColor=white"/> <strong>Figma</strong>
-as a single design system with reusable components.
+A review of publicly documented executive decision-support practices indicates that
+no single application currently performs unified, cross-domain policy synthesis or
+autonomously generates decision options for presidential review. Instead, decision
+support is distributed across specialized tools, structured briefings, and
+human-led coordination processes.
 </p>
 
-<h4>1.5.1 Wireframes</h4>
-<ul>
-  <li><strong>Presidential Home</strong> — Decision-first layout with Draft Response and option comparison</li>
-  <li><strong>Decision Brief</strong> — Structured memo format with expandable detail sections</li>
-  <li><strong>What-If</strong> — Scenario toggles and impact updates</li>
-  <li><strong>History</strong> — Versioned Draft Responses with audit metadata</li>
-  <li><strong>Analyst Panel</strong> — Evidence inspection and conflict matrix</li>
-</ul>
-
-<h4>1.5.2 High-Fidelity Mockups</h4>
-<ul>
-  <li><strong>Presidential Home</strong> — Minimal, high-trust dashboard optimized for one-minute review</li>
-  <li><strong>Decision Brief</strong> — Option cards with pros/cons, risks, constraints, and confidence indicators</li>
-  <li><strong>What-If</strong> — Controlled scenario exploration UI with clear deltas and updated recommendation</li>
-</ul>
-
-<h4>1.5.3 Component Library</h4>
-<ul>
-  <li>Option cards, risk badges, confidence indicator, data freshness indicator</li>
-  <li>Primary actions: request clarification, run what-if, request implementation plan</li>
-  <li>Typography and spacing rules for executive readability</li>
-</ul>
-
-<h3>1.6 Interaction Flows (Figma Prototypes)</h3>
 <p>
-Interaction flows are implemented as clickable prototypes in
-<img alt="Figma" src="https://img.shields.io/badge/Figma-F24E1E?logo=figma&logoColor=white"/> <strong>Figma</strong>.
+At the federal level, presidential decisions are informed through products such as
+the Presidential Daily Brief, which focuses on intelligence synthesis and uncertainty
+reporting rather than policy recommendation
+(<a href="https://www.dni.gov/index.php/what-we-do/briefings/presidential-daily-brief" target="_blank">Office of the Director of National Intelligence</a>).
+Similarly, National Security Council processes rely on staff coordination and option
+papers prepared by human experts rather than automated advisory systems
+(<a href="https://www.whitehouse.gov/nsc/" target="_blank">White House National Security Council</a>).
 </p>
 
+<p>
+Commercial platforms used by government and enterprise organizations, such as
+Palantir Gotham, provide advanced data integration and situational awareness
+capabilities but do not generate executive policy recommendations or structured
+decision memoranda
+(<a href="https://www.palantir.com/platforms/gotham/" target="_blank">Palantir Gotham</a>).
+Likewise, economic and crisis modeling tools used by agencies support scenario
+analysis within narrow domains rather than cross-domain executive synthesis
+(<a href="https://www.cbo.gov/about/products/budget-economic-data" target="_blank">Congressional Budget Office</a>).
+</p>
+
+<p>
+These findings suggest that existing systems support executive decision making
+indirectly through analysis, modeling, and briefing preparation, while the synthesis
+of tradeoffs, legal constraints, and recommendations remains a human responsibility.
+SENTINEL is therefore positioned as a conceptual design exploration that examines how
+coordinated AI agents could augment existing workflows by producing structured,
+transparent, and advisory decision memoranda without replacing human authority.
+</p>
+
+<hr/>
+
+<h3>1.3 UX Implications</h3>
+<ul>
+  <li>Executive interfaces must prioritize clarity and option comparison over raw data</li>
+  <li>Decision artifacts should mirror traditional option memo structures</li>
+  <li>Trust indicators such as confidence, disagreement, and data freshness are critical</li>
+  <li>AI capabilities must remain advisory and interpretable</li>
+</ul>
+
+<hr/>
+
+<h3>1.4 Design Artifacts (Figma)</h3>
+<ul>
+  <li>Low-fidelity wireframes for Presidential Home and Decision Brief views</li>
+  <li>High-fidelity mockups emphasizing one-minute decision comprehension</li>
+  <li>Reusable component library for option cards, risk badges, and confidence indicators</li>
+  <li>Clickable interaction flows implemented as Figma prototypes</li>
+</ul>
+
+<hr/>
+
+<h3>1.5 Interaction Flows</h3>
 <ol>
-  <li>
-    <strong>New Brief Flow</strong><br/>
-    Home → Enter policy question → Confirm decision context → Generate Draft Response → Review options
-  </li>
-  <li>
-    <strong>Review Flow</strong><br/>
-    Home → Open Draft Response → Compare Option A/B/C → Expand risks/legal → Request revision
-  </li>
-  <li>
-    <strong>What-If Flow</strong><br/>
-    Decision Brief → Select scenario toggle → Update impacts → Update confidence → Return to recommendation
-  </li>
-  <li>
-    <strong>Revision Flow</strong><br/>
-    Decision Brief → Add constraints or priorities → Regenerate Draft Response → Compare versions in History
-  </li>
+  <li><strong>New Decision Flow:</strong> Home → Enter policy question → Generate Draft Response → Review options</li>
+  <li><strong>Review Flow:</strong> Home → Open Draft Response → Compare Option A/B/C → Expand risks and constraints</li>
+  <li><strong>What-If Flow:</strong> Decision Brief → Select scenario toggle → Update impacts and confidence</li>
 </ol>
 
-<h3>1.7 Milestone 1 Deliverables</h3>
+<hr/>
+
+<h3>1.6 Milestone 1 Deliverables</h3>
 <ul>
-  <li><strong>D1:</strong> Research notes and requirements summary</li>
-  <li><strong>D2:</strong> Personas and role responsibilities</li>
-  <li><strong>D3:</strong> Information architecture map</li>
-  <li><strong>D4:</strong> Wireframes for core screens in Figma</li>
-  <li><strong>D5:</strong> High-fidelity mockups for Presidential View in Figma</li>
-  <li><strong>D6:</strong> Clickable interaction flow prototypes in Figma</li>
+  <li>Research summary documenting existing executive decision-support practices</li>
+  <li>Personas and role definitions</li>
+  <li>Information architecture map</li>
+  <li>Wireframes and high-fidelity mockups (Figma)</li>
+  <li>Clickable interaction flow prototypes (Figma)</li>
 </ul>
 
-<h3>1.8 Exit Criteria</h3>
-<ul>
-  <li>Presidential Home supports one-minute comprehension of the active decision</li>
-  <li>Options A/B/C are comparable without opening additional panels</li>
-  <li>Trust indicators are visible and interpretable</li>
-  <li>Figma prototypes accurately reflect the Draft Response memo structure</li>
-</ul>
+<hr/>
 
+<h3>1.7 Exit Criteria</h3>
+<ul>
+  <li>Mockups reflect real-world executive briefing structures</li>
+  <li>Presidential Home supports one-minute decision comprehension</li>
+  <li>Options are comparable without additional navigation</li>
+  <li>Findings are grounded in publicly verifiable sources</li>
+</ul>
