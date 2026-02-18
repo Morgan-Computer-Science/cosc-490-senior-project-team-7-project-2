@@ -15,22 +15,20 @@
 
 <h2>Overview</h2>
 <p>
-SENTINEL is a multi-agent AI decision support system designed to assist
-executive-level decision making. The system synthesizes analysis across
-multiple national interest domains and produces structured decision memoranda
+SENTINEL is a multi-agent AI decision support system designed to assist executive-level decision making.
+The system synthesizes analysis across multiple national interest domains and produces structured decision memoranda
 that present policy options, tradeoffs, risks, and recommendations.
 </p>
 
 <p>
-SENTINEL is advisory by design. It does not make decisions, issue directives,
-or replace institutional authority. Final decision-making responsibility
-remains with the human decision maker.
+SENTINEL is advisory by design. It does not make decisions, issue directives, or replace institutional authority.
+Final decision-making responsibility remains with the human decision maker.
 </p>
 
 <p>
 <strong>Disclaimer:</strong><br/>
-This project is a fictional simulation created solely for academic and research
-purposes. It does not represent any real government system, policy, or authority.
+This project is a fictional simulation created solely for academic and research purposes.
+It does not represent any real government system, policy, or authority.
 </p>
 
 <hr/>
@@ -48,22 +46,19 @@ purposes. It does not represent any real government system, policy, or authority
 
 <h2>System Concept</h2>
 <p>
-High-level executive decisions are traditionally informed through layered staff
-coordination, agency input, and structured decision memoranda. SENTINEL models
-this process digitally using coordinated AI agents that emulate advisory roles
-while preserving human authority.
+High-level executive decisions are traditionally informed through layered staff coordination, agency input,
+and structured decision memoranda. SENTINEL models this process digitally using coordinated AI agents that emulate
+advisory roles while preserving human authority.
 </p>
 
 <p>
-The primary system output is a <strong>Draft Response</strong>, a structured
-decision memo equivalent to what a President would review prior to making a
-final decision.
+The primary system output is a <strong>Draft Response</strong>, a structured decision memo equivalent to what a President
+would review prior to making a final decision.
 </p>
 
 <hr/>
 
 <h2>System Architecture</h2>
-
 <h3>High-Level Workflow</h3>
 <ol>
   <li>A policy question is introduced into the system</li>
@@ -79,11 +74,6 @@ final decision.
 <h2>Advisory Agents</h2>
 
 <h3>Top-Level Agents</h3>
-<p>
-Each top-level agent represents a core national interest domain and contributes
-domain-specific analysis to the final decision memo.
-</p>
-
 <ul>
   <li>Economic Stability Agent</li>
   <li>Inflation and Prices Agent</li>
@@ -98,11 +88,6 @@ domain-specific analysis to the final decision memo.
 </ul>
 
 <h3>Shared Sub-Agent Structure</h3>
-<p>
-Each top-level agent is internally composed of layered sub-agents to ensure
-depth, realism, and accountability.
-</p>
-
 <ul>
   <li>Evidence Retrieval</li>
   <li>Scenario and Forecast Analysis</li>
@@ -111,54 +96,6 @@ depth, realism, and accountability.
   <li>Metrics and Monitoring</li>
   <li>Legal and Authority Review</li>
   <li>Red Team Challenge</li>
-</ul>
-
-<hr/>
-
-<h2>User Views</h2>
-
-<h3>Presidential View</h3>
-<p>
-A minimal, decision-focused interface designed for rapid comprehension under
-time pressure.
-</p>
-
-<ul>
-  <li>Active Draft Response</li>
-  <li>Three clearly differentiated policy options</li>
-  <li>Risk and legal constraint summaries</li>
-  <li>Confidence and uncertainty indicators</li>
-  <li>Requests for clarification or what-if analysis</li>
-</ul>
-
-<h3>Analyst View (Conceptual)</h3>
-<p>
-An internal perspective used for transparency, validation, and system oversight.
-</p>
-
-<ul>
-  <li>Agent outputs and assumptions</li>
-  <li>Source inspection and traceability</li>
-  <li>Conflict identification and resolution</li>
-  <li>System confidence monitoring</li>
-</ul>
-
-<hr/>
-
-<h2>Key System Output: Draft Response</h2>
-<p>
-The Draft Response is the central artifact produced by SENTINEL.
-</p>
-
-<ul>
-  <li>Situation summary</li>
-  <li>Decision required</li>
-  <li>Operational and legal constraints</li>
-  <li>Three policy options</li>
-  <li>Recommended course of action</li>
-  <li>Risks and uncertainties</li>
-  <li>Legal and authority considerations</li>
-  <li>Confidence and disagreement indicators</li>
 </ul>
 
 <hr/>
@@ -205,53 +142,92 @@ The Draft Response is the central artifact produced by SENTINEL.
 <hr/>
 
 <h2>Technology Stack</h2>
-
 <p>
-SENTINEL is designed using a layered technology stack that reflects modern
-AI-driven decision support systems. The architecture separates user experience,
-agent orchestration, model reasoning, data grounding, and governance.
+SENTINEL is designed using a layered technology stack to separate user experience, orchestration,
+model reasoning, data grounding, and governance.
 </p>
+
+<!-- Icon badges sourced from Simple Icons via shields.io -->
+<!-- These are safe to use in GitHub README HTML and will render as images. -->
 
 <h3>Interface Layer</h3>
 <ul>
-  <li>Web-based user interface</li>
-  <li>Role-based views for Presidential and Analyst users</li>
-  <li>Minimal, low-cognitive-load design for high-stakes decisions</li>
+  <li>
+    <img alt="HTML5" src="https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white"/>
+    <img alt="CSS3" src="https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white"/>
+    <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000"/>
+    <span>Web-based UI for Presidential and Analyst views</span>
+  </li>
+  <li>
+    <img alt="React" src="https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=000"/>
+    <span>Optional component-based UI for rapid iteration and role-based layouts</span>
+  </li>
 </ul>
 
 <h3>Orchestration Layer</h3>
 <ul>
-  <li>Python-based coordination service</li>
-  <li>Intent classification and agent routing</li>
-  <li>Multi-agent execution management</li>
-  <li>Conflict detection and Draft Response assembly</li>
+  <li>
+    <img alt="Python" src="https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white"/>
+    <span>Coordinator service for routing, conflict resolution, and Draft Response assembly</span>
+  </li>
+  <li>
+    <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white"/>
+    <span>Optional API layer for agent calls and UI integration</span>
+  </li>
 </ul>
 
 <h3>Agent and Model Layer</h3>
 <ul>
-  <li>Large language models for reasoning and synthesis</li>
-  <li>Multi-agent architecture with domain specialization</li>
-  <li>Structured prompts and tool-assisted reasoning</li>
+  <li>
+    <img alt="Google Cloud" src="https://img.shields.io/badge/Google%20Cloud-4285F4?logo=googlecloud&logoColor=white"/>
+    <span>Cloud platform for model access, agent runtime, and managed services</span>
+  </li>
+  <li>
+    <img alt="Vertex AI" src="https://img.shields.io/badge/Vertex%20AI-1A73E8?logo=googlecloud&logoColor=white"/>
+    <span>Managed AI services for model hosting, evaluation, and deployment</span>
+  </li>
+  <li>
+    <img alt="Gemini" src="https://img.shields.io/badge/Gemini-0F9D58?logo=google&logoColor=white"/>
+    <span>LLM reasoning and synthesis for multi-agent decision memo generation</span>
+  </li>
 </ul>
 
 <h3>Data Grounding and Knowledge Layer</h3>
 <ul>
-  <li>Trusted source whitelisting</li>
-  <li>Retrieval-augmented generation principles</li>
-  <li>Structured and unstructured knowledge integration</li>
+  <li>
+    <img alt="BigQuery" src="https://img.shields.io/badge/BigQuery-669DF6?logo=googlebigquery&logoColor=white"/>
+    <span>Structured indicators and time-series policy data (optional)</span>
+  </li>
+  <li>
+    <img alt="Cloud Storage" src="https://img.shields.io/badge/Cloud%20Storage-4285F4?logo=googlecloud&logoColor=white"/>
+    <span>Document storage for source bundles and memo artifacts (optional)</span>
+  </li>
+  <li>
+    <img alt="Firestore" src="https://img.shields.io/badge/Firestore-FFCA28?logo=firebase&logoColor=000"/>
+    <span>Session state, version history, and Draft Response metadata (optional)</span>
+  </li>
 </ul>
 
 <h3>Governance and Observability</h3>
 <ul>
-  <li>Auditability of Draft Responses</li>
-  <li>Source traceability</li>
-  <li>Explicit uncertainty and disagreement reporting</li>
+  <li>
+    <img alt="IAM" src="https://img.shields.io/badge/IAM-4285F4?logo=googlecloud&logoColor=white"/>
+    <span>Role-based access control for Presidential vs Analyst permissions</span>
+  </li>
+  <li>
+    <img alt="Cloud Logging" src="https://img.shields.io/badge/Cloud%20Logging-4285F4?logo=googlecloud&logoColor=white"/>
+    <span>Audit logging of agent activity, sources, and Draft Response lineage</span>
+  </li>
+  <li>
+    <img alt="Cloud Monitoring" src="https://img.shields.io/badge/Cloud%20Monitoring-4285F4?logo=googlecloud&logoColor=white"/>
+    <span>Latency, error rates, and system health metrics (optional)</span>
+  </li>
 </ul>
 
 <hr/>
 
 <h2>Author</h2>
 <p>
-Developed as an academic project exploring AI-assisted governance,
-multi-agent systems, and executive decision support.
+Developed as an academic project exploring AI-assisted governance, multi-agent systems,
+and executive decision support.
 </p>
