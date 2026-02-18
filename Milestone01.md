@@ -1,6 +1,6 @@
 <hr/>
 
-<h2>Milestone 1 Layout: Research and Mockup Design</h2>
+<h2>Milestone 1 Layout: Research & Mockup Design</h2>
 <p>
 Milestone 1 establishes SENTINEL’s problem framing, user experience requirements, and validated UI direction.
 All mockups, wireframes, and interaction flows are created in
