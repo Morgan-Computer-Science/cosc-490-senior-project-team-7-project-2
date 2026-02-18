@@ -25,45 +25,88 @@ prototypes are produced in
 
 <h3>1.2 Research Findings: Executive Decision Support Landscape</h3>
 
-<p>
-A review of publicly documented executive decision-support practices indicates that
-no single application currently performs unified, cross-domain policy synthesis or
-autonomously generates decision options for presidential review. Instead, decision
-support is distributed across specialized tools, structured briefings, and
-human-led coordination processes.
-</p>
+<ul>
+  <li>
+    <strong>No unified presidential decision-support application exists.</strong>
+    <ul>
+      <li>Public documentation indicates that executive decision making is supported through a combination of briefings, analytic tools, and human coordination rather than a single integrated system.</li>
+      <li>No publicly available platform performs cross-domain synthesis (economy, security, diplomacy, law) into automated policy options for presidential review.</li>
+    </ul>
+  </li>
 
-<p>
-At the federal level, presidential decisions are informed through products such as
-the Presidential Daily Brief, which focuses on intelligence synthesis and uncertainty
-reporting rather than policy recommendation
-(<a href="https://www.dni.gov/index.php/what-we-do/briefings/presidential-daily-brief" target="_blank">Office of the Director of National Intelligence</a>).
-Similarly, National Security Council processes rely on staff coordination and option
-papers prepared by human experts rather than automated advisory systems
-(<a href="https://www.whitehouse.gov/nsc/" target="_blank">White House National Security Council</a>).
-</p>
+  <li>
+    <strong>Presidential decision inputs are delivered through structured briefings, not automated recommendations.</strong>
+    <ul>
+      <li>The Presidential Daily Brief focuses on intelligence synthesis, uncertainty, and situational awareness rather than policy recommendation.</li>
+      <li>Policy options and recommendations are produced by human staff through deliberative processes.</li>
+      <li>
+        Source:
+        <a href="https://www.dni.gov/index.php/what-we-do/briefings/presidential-daily-brief" target="_blank">
+          Office of the Director of National Intelligence – Presidential Daily Brief
+        </a>
+      </li>
+    </ul>
+  </li>
 
-<p>
-Commercial platforms used by government and enterprise organizations, such as
-Palantir Gotham, provide advanced data integration and situational awareness
-capabilities but do not generate executive policy recommendations or structured
-decision memoranda
-(<a href="https://www.palantir.com/platforms/gotham/" target="_blank">Palantir Gotham</a>).
-Likewise, economic and crisis modeling tools used by agencies support scenario
-analysis within narrow domains rather than cross-domain executive synthesis
-(<a href="https://www.cbo.gov/about/products/budget-economic-data" target="_blank">Congressional Budget Office</a>).
-</p>
+  <li>
+    <strong>National Security Council processes are human-coordinated and document-driven.</strong>
+    <ul>
+      <li>Decision options are developed through staff coordination, interagency input, and structured option papers.</li>
+      <li>Software systems support document management and coordination rather than autonomous reasoning.</li>
+      <li>
+        Source:
+        <a href="https://www.whitehouse.gov/nsc/" target="_blank">
+          White House – National Security Council
+        </a>
+      </li>
+    </ul>
+  </li>
 
-<p>
-These findings suggest that existing systems support executive decision making
-indirectly through analysis, modeling, and briefing preparation, while the synthesis
-of tradeoffs, legal constraints, and recommendations remains a human responsibility.
-SENTINEL is therefore positioned as a conceptual design exploration that examines how
-coordinated AI agents could augment existing workflows by producing structured,
-transparent, and advisory decision memoranda without replacing human authority.
-</p>
+  <li>
+    <strong>Existing government and enterprise platforms emphasize data integration and situational awareness.</strong>
+    <ul>
+      <li>Platforms such as Palantir Gotham are used for intelligence fusion, operational dashboards, and scenario exploration.</li>
+      <li>These systems do not generate executive policy recommendations or structured decision memoranda.</li>
+      <li>
+        Source:
+        <a href="https://www.palantir.com/platforms/gotham/" target="_blank">
+          Palantir Gotham Platform Overview
+        </a>
+      </li>
+    </ul>
+  </li>
 
-<hr/>
+  <li>
+    <strong>Economic and crisis modeling tools operate within narrow domains.</strong>
+    <ul>
+      <li>Agencies rely on specialized models for economic forecasting, disaster response, and crisis simulation.</li>
+      <li>Outputs require expert interpretation and are not integrated into unified executive decision artifacts.</li>
+      <li>
+        Source:
+        <a href="https://www.cbo.gov/about/products/budget-economic-data" target="_blank">
+          Congressional Budget Office – Economic Data and Models
+        </a>
+      </li>
+    </ul>
+  </li>
+
+  <li>
+    <strong>Human judgment remains central to executive decision making.</strong>
+    <ul>
+      <li>Synthesis of tradeoffs, legal authority, political constraints, and risk remains a human responsibility.</li>
+      <li>Existing systems support analysis but do not replace institutional decision processes.</li>
+    </ul>
+  </li>
+
+  <li>
+    <strong>Identified gap motivating SENTINEL.</strong>
+    <ul>
+      <li>Current tools lack unified, cross-domain synthesis into structured decision memos.</li>
+      <li>There is no system designed specifically to support executive-level option comparison with transparent assumptions and uncertainty.</li>
+      <li>SENTINEL is positioned as a conceptual design exploration to investigate how coordinated AI agents could augment existing workflows while preserving human authority.</li>
+    </ul>
+  </li>
+</ul>
 
 <h3>1.3 UX Implications</h3>
 <ul>
