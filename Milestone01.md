@@ -152,7 +152,7 @@ prototypes are produced in
 <ul>
   <li>Mockups reflect real-world executive briefing structures</li>
   <ul>
-    <li> Figma (User Flow): <a href="https://www.figma.com/board/8Txl30SeviNtEHjAytEAs1/490--Design-Diagram?node-id=0-1&t=kROLenbJARP9rM2y-1" target="_blank">
+    <li> Figma (User Flow): <a href="https://www.figma.com/board/8Txl30SeviNtEHjAytEAs1/490--Design-Diagram?node-id=0-1&t=kROLenbJARP9rM2y-1" target="_blank"> Click Here!
     </ul>
   <li>Presidential Home supports one-minute decision comprehension</li>
   <li>Options are comparable without additional navigation</li>
