@@ -142,10 +142,10 @@ prototypes are produced in
   <li>Research summary documenting existing executive decision-support practices</li>
   <li>Personas and role definitions</li>
   <li>Information architecture map</li>
-  <li>Wireframes and high-fidelity mockups (Figma)</li>
-    <ul>
+  <ul>
         <li> Figma (User Flow): <a href="https://www.figma.com/board/8Txl30SeviNtEHjAytEAs1/490--Design-Diagram?node-id=0-1&t=kROLenbJARP9rM2y-1" target="_blank"> Click Here!
     </ul>
+  <li>Wireframes and high-fidelity mockups (Figma)</li>
   <li>Clickable interaction flow prototypes (Figma)</li>
 </ul>
 
