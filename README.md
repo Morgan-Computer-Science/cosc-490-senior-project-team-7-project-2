@@ -208,6 +208,5 @@ The system emphasizes human-centered decision support rather than automation.
 
 <h2>Author</h2>
 <p>
-Developed as an academic project exploring AI-assisted governance, multi-agent systems,
-and executive decision support.
+Team 7: Amyra Harry, Elijah Ballou, Daniel Onyejiekwe, Jaden Reeves
 </p>
