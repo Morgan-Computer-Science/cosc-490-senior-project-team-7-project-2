@@ -143,6 +143,9 @@ prototypes are produced in
   <li>Personas and role definitions</li>
   <li>Information architecture map</li>
   <li>Wireframes and high-fidelity mockups (Figma)</li>
+    <ul>
+        <li> Figma (User Flow): <a href="https://www.figma.com/board/8Txl30SeviNtEHjAytEAs1/490--Design-Diagram?node-id=0-1&t=kROLenbJARP9rM2y-1" target="_blank"> Click Here!
+    </ul>
   <li>Clickable interaction flow prototypes (Figma)</li>
 </ul>
 
@@ -151,9 +154,6 @@ prototypes are produced in
 <h3>1.7 Exit Criteria</h3>
 <ul>
   <li>Mockups reflect real-world executive briefing structures</li>
-  <ul>
-    <li> Figma (User Flow): <a href="https://www.figma.com/board/8Txl30SeviNtEHjAytEAs1/490--Design-Diagram?node-id=0-1&t=kROLenbJARP9rM2y-1" target="_blank"> Click Here!
-    </ul>
   <li>Presidential Home supports one-minute decision comprehension</li>
   <li>Options are comparable without additional navigation</li>
   <li>Findings are grounded in publicly verifiable sources</li>
