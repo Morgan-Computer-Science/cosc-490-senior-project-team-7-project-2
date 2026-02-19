@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import "./Chatbot.css";
 
-const BOT_REPLIES = [
-  "That's a great question! I'm here to assist you with anything you need — from answering questions to brainstorming ideas or writing code.",
-  "Interesting! Let me think about that... I'd say the key insight here is to break it down into smaller parts and tackle each one methodically.",
-  "Sure! Here's what I know about that topic. Feel free to ask me to go deeper on any aspect.",
-  "I can definitely help with that. Let me put together a clear and concise response for you.",
-];
+const GOVERNMENT_DOMAINS = {
+  economy:
+    "The Economy domain covers fiscal policy, taxation, federal budgeting, inflation, employment, trade, and economic growth strategies implemented by the government.",
+  nationalsecurity:
+    "The National Security domain includes defense policy, homeland security, intelligence operations, cybersecurity, and military strategy to protect the country.",
+  internationalrelations:
+    "The International Relations domain focuses on diplomacy, foreign policy, global alliances, treaties, international trade agreements, and geopolitical strategy.",
+};
 
 function getTime() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -16,6 +18,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -24,6 +27,8 @@ export default function Chatbot() {
   }, [messages, isTyping]);
 
   const sendMessage = (text) => {
+    if (!selectedDomain) return;
+
     const content = (text || input).trim();
     if (!content) return;
 
@@ -34,10 +39,10 @@ export default function Chatbot() {
 
     setIsTyping(true);
     setTimeout(() => {
-      const reply = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
+      const reply = GOVERNMENT_DOMAINS[selectedDomain];
       setIsTyping(false);
       setMessages((prev) => [...prev, { role: "bot", content: reply, time: getTime() }]);
-    }, 1200 + Math.random() * 800);
+    }, 1000);
   };
 
   const handleKeyDown = (e) => {
@@ -58,9 +63,45 @@ export default function Chatbot() {
   return (
     <div className="chat-root">
       <div className="chat-messages">
-        {showEmpty && (
+
+        {/* CHANGE DOMAIN BAR */}
+        {selectedDomain && (
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "10px 20px",
+            borderBottom: "1px solid rgba(255,255,255,0.1)"
+          }}>
+            <span>
+              Current Domain: <strong>{selectedDomain}</strong>
+            </span>
+            <button
+              onClick={() => {
+                setSelectedDomain(null);
+                setMessages([]);
+              }}
+            >
+              Change Domain
+            </button>
+          </div>
+        )}
+
+        {/* DOMAIN SELECTION UI */}
+        {!selectedDomain && (
           <div className="empty-state">
-            <h3>How can I help you today?</h3>
+            <h3>Select a Policy Domain</h3>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "15px" }}>
+              <button onClick={() => setSelectedDomain("economy")}>Economy</button>
+              <button onClick={() => setSelectedDomain("national Security")}>National Security</button>
+              <button onClick={() => setSelectedDomain("international Relations")}>International Relations</button>
+            </div>
+          </div>
+        )}
+
+        {selectedDomain && showEmpty && (
+          <div className="empty-state">
+            <h3>Ask me about {selectedDomain}</h3>
           </div>
         )}
 
@@ -93,21 +134,24 @@ export default function Chatbot() {
           <textarea
             ref={textareaRef}
             className="chat-input"
-            placeholder="Message Sentinel..."
+            placeholder={selectedDomain ? "Message Sentinel..." : "Select a domain first..."}
             value={input}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
             rows={1}
+            disabled={!selectedDomain}
           />
           <button
             className="send-btn"
             onClick={() => sendMessage()}
-            disabled={!input.trim() || isTyping}
+            disabled={!input.trim() || isTyping || !selectedDomain}
           >
             ↑
           </button>
         </div>
-        <div className="input-footer">Press Enter to send · Shift+Enter for new line</div>
+        <div className="input-footer">
+          Press Enter to send · Shift+Enter for new line
+        </div>
       </div>
     </div>
   );
