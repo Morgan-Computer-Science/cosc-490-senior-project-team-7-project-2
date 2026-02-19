@@ -93,8 +93,8 @@ export default function Chatbot() {
             <h3>Select a Policy Domain</h3>
             <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "15px" }}>
               <button onClick={() => setSelectedDomain("economy")}>Economy</button>
-              <button onClick={() => setSelectedDomain("national Security")}>National Security</button>
-              <button onClick={() => setSelectedDomain("international Relations")}>International Relations</button>
+              <button onClick={() => setSelectedDomain("nationalSecurity")}>National Security</button>
+              <button onClick={() => setSelectedDomain("internationalRelations")}>International Relations</button>
             </div>
           </div>
         )}
