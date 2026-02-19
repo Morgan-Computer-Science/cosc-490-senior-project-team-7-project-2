@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import "./Chatbot.css";
 
 const GOVERNMENT_DOMAINS = {
-  economy:
+  Economy:
     "The Economy domain covers fiscal policy, taxation, federal budgeting, inflation, employment, trade, and economic growth strategies implemented by the government.",
-  nationalsecurity:
+  NationalSecurity:
     "The National Security domain includes defense policy, homeland security, intelligence operations, cybersecurity, and military strategy to protect the country.",
-  internationalrelations:
+  InternationalRelations:
     "The International Relations domain focuses on diplomacy, foreign policy, global alliances, treaties, international trade agreements, and geopolitical strategy.",
 };
 
@@ -92,9 +92,9 @@ export default function Chatbot() {
           <div className="empty-state">
             <h3>Select a Policy Domain</h3>
             <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "15px" }}>
-              <button onClick={() => setSelectedDomain("economy")}>Economy</button>
-              <button onClick={() => setSelectedDomain("nationalSecurity")}>National Security</button>
-              <button onClick={() => setSelectedDomain("internationalRelations")}>International Relations</button>
+              <button onClick={() => setSelectedDomain("Economy")}>Economy</button>
+              <button onClick={() => setSelectedDomain("NationalSecurity")}>National Security</button>
+              <button onClick={() => setSelectedDomain("InternationalRelations")}>International Relations</button>
             </div>
           </div>
         )}
