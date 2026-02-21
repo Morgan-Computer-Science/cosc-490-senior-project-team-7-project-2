@@ -1,0 +1,42 @@
+.page 
+{
+  min-height: 100vh;              /* makes the page at least as tall as the full browser window */
+  display: grid;                  /* turns this element into a CSS grid container */
+  place-items: center;            /* centers the child both horizontally and vertically inside the grid */
+  background: #001950;            /* sets the page background color */
+  color: white;                   /* sets default text color for everything inside */
+  font-family: system-ui, Arial, sans-serif;
+}
+
+.container 
+{
+
+  width: 900px;                   /* sets the container width to a fixed 900 pixels */
+  height: 800px;                  /* sets the container height to a fixed 800 pixels */
+  padding: 24px;                  /* adds space inside the container between the border and its content */
+  border-radius: 12px;            /* rounds the container corners */
+  background: rgba(0, 0, 0, 0.473);/* sets a semi-transparent black background (glass look) */
+  border: 1px solid rgba(255, 255, 255, 0.12); /* adds a thin, slightly transparent white border */
+  text-align: center;
+
+  /* Special FX*/
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  
+}
+
+
+.heading
+ {
+    font-family: "Times New Roman", Times, serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.subHeading
+{
+    font-size:medium;
+    /* font-family:  */
+}
+
