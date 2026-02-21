@@ -1,22 +1,33 @@
 .page 
 {
   min-height: 100vh;              /* makes the page at least as tall as the full browser window */
+
   display: grid;                  /* turns this element into a CSS grid container */
+
   place-items: center;            /* centers the child both horizontally and vertically inside the grid */
+
   background: #001950;            /* sets the page background color */
+
   color: white;                   /* sets default text color for everything inside */
+
   font-family: system-ui, Arial, sans-serif;
 }
 
 .container 
 {
 
-  width: 900px;                   /* sets the container width to a fixed 900 pixels */
-  height: 800px;                  /* sets the container height to a fixed 800 pixels */
+  width: min(900px,100%);     /* sets the container width to a fixed 900 pixels */
+
+  min-height: 700px;          /* sets the container height to a fixed 800 pixels */
+
   padding: 24px;                  /* adds space inside the container between the border and its content */
-  border-radius: 12px;            /* rounds the container corners */
+
+  border-radius: 15px;            /* rounds the container corners */
+
   background: rgba(0, 0, 0, 0.473);/* sets a semi-transparent black background (glass look) */
+
   border: 1px solid rgba(255, 255, 255, 0.12); /* adds a thin, slightly transparent white border */
+  
   text-align: center;
 
   /* Special FX*/
@@ -26,17 +37,193 @@
 }
 
 
-.heading
- {
-    font-family: "Times New Roman", Times, serif;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin: 0;
+.heading {
+  font-family: "Times New Roman", Times, serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+  text-align: center;
+
+  /* gold gradient */
+  background: linear-gradient(
+    110deg,
+    #5a3b00 0%,
+    #caa44a 20%,
+    #fff2b0 35%,
+    #caa44a 50%,
+    #8a5a00 70%,
+    #fff2b0 85%,
+    #5a3b00 100%
+  );
+  background-size: 250% 100%;
+  background-position: 0% 50%;
+
+  /* clip gradient to text */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  /* animated shine sweep */
+  animation: goldShine 2.6s linear infinite;
 }
+
 
 .subHeading
 {
     font-size:medium;
-    /* font-family:  */
+    letter-spacing: 0.1em;
+    font-family: "Roboto", Arial, sans-serif;
+    margin-top: 10px;
+}
+
+.logo
+{
+    font-display: block;
+    width: 200px;
+    height: 200px;
+    margin-top: 8%;
+    
+    /* Image FX   Pulse (animation) */
+
+    animation: pulse 2s ease-in-out infinite;
+
+
+}
+
+.label
+{
+    display: block;
+    margin-top: 8%;
+    margin-bottom: 15px;
+    margin-left: 8%;
+    font-family: "Roboto", Arial, sans-serif;
+    opacity: 0.8;
+    font-size: xx-large;
+    text-align: left;
+    
+
+}
+
+
+
+.label02
+{
+    display: block;
+    margin-top: 5%;
+    margin-bottom: 15px;
+    font-family: "Roboto", Arial, sans-serif;
+    opacity: 0.8;
+    font-size: xx-large;
+    text-align: left;
+    margin-left: 8%;
+}
+
+.input
+{
+     width: 85%;
+     padding:24px 18px;   /* makes the box taller and wider */
+     border-radius: 10px;
+     border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    outline: none;
+    font-size: 18px;      /* makes text bigger */
+    text-align: center;
+}
+
+.input02
+{
+     width: 85%;
+     padding:24px 18px;   /* makes the box taller and wider */
+     border-radius: 10px;
+     border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    outline: none;
+    font-size: 18px;      /* makes text bigger */
+    text-align: center;
+}
+
+
+.loginButton
+{
+  width: 85%;
+  margin-top: 10%;
+  padding: 24px 18px;
+  border-radius: 50px;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  font-weight: 500;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.footer::after 
+{
+    content: "Property of the U.S. Government";
+    display: block;
+    margin-top: 5%;
+}
+
+.footer2::after
+{
+    content: 'Powered by Group 7: Amyra Harry, Elijah Ballou, Daniel Onyejiekwe, Jaden Reeves';
+    display: block;
+    margin-top: 2%;
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Special FX Section */
+
+@keyframes pulse
+{
+    0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+}
+
+.loginButton:hover
+{
+    opacity: 0.95;
+}
+
+.loginButton:active
+{
+    transform: translateY(1px);
 }
 
