@@ -1,0 +1,108 @@
+.homepage
+{
+   min-height: 100vh;
+  background: linear-gradient(180deg, #011571, #000000);
+}
+
+
+
+.topRect {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+
+  background: rgb(5, 0, 29);
+  border-bottom: 2px solid rgb(84, 84, 84);
+  z-index: 1000;
+
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+
+  /* important: lets the centered brand use absolute positioning */
+  position: fixed;
+}
+
+.Logout {
+  width: 175px;
+  height: 50px;
+  border-radius: 10px;
+
+  font-family: "Roboto", Arial, sans-serif;
+  background: rgba(149, 149, 149, 0.333);
+  border: 2px solid rgb(79, 79, 79);
+
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.Logout:hover {
+  background: rgba(255, 0, 0, 0.25);
+  border-color: rgb(255, 0, 0);
+  color: rgb(255, 255, 255);
+}
+
+/* Center the brand block in the header no matter what is on the left */
+.brandRow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  /* optional: prevents it from shrinking weird */
+  white-space: nowrap;
+}
+
+.homeLogo {
+  height: 70px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* transform: translateX(-10%); */
+}
+
+.heading {
+  margin: 0;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 52px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  line-height: 1;
+  left: -27.5%;
+  position: relative;
+
+  background: linear-gradient(
+    180deg,
+    #5a3b00 0%,
+    #caa44a 20%,
+    #fff2b0 35%,
+    #caa44a 50%,
+    #8a5a00 70%,
+    #fff2b0 85%,
+    #5a3b00 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.subHeading {
+  margin: 6px 0 0 0;
+  font-family: "Roboto", Arial, sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.1;
+  color: rgba(255, 255, 255, 0.95);
+}

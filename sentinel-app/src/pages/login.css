@@ -68,7 +68,7 @@
 
   /* gold gradient */
   background: linear-gradient(
-    110deg,
+    180deg,
     #5a3b00 0%,
     #caa44a 20%,
     #fff2b0 35%,
@@ -101,8 +101,8 @@
 .logo
 {
     font-display: block;
-    width: 200px;
-    height: 200px;
+    width: 250px;
+    height: 250px;
     margin-top: 8%;
     
     /* Image FX   Pulse (animation) */
@@ -208,7 +208,7 @@
   font-size: 14px;
 
   width: 100%;
-  max-width: 520px;        /* change this number to control length */
+  max-width: 720px;        /* change this number to control length */
   padding: 10px 12px;      /* keep padding reasonable */
 
   border-radius: 10px;
