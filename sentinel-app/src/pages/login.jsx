@@ -9,6 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // Demo Credentials
   const DEMO_PRES = "POTUS";
   const DEMO_PASS = "sentinel1123";
 
