@@ -1,37 +1,20 @@
-import feedparser
+import requests
+
+def safe_fetch(url):
+    try:
+        r = requests.get(url, timeout=5)
+        return r.text[:1500]
+    except:
+        return "Live intelligence feed unavailable."
 
 
 def get_cyber_intel():
-    feed = feedparser.parse(
-        "https://www.cisa.gov/cybersecurity-advisories/all.xml"
-    )
-
-    entries = []
-    for item in feed.entries[:3]:
-        entries.append(f"{item.title}: {item.summary}")
-
-    return "\n".join(entries)
+    return safe_fetch("https://www.cisa.gov/news-events/alerts")
 
 
 def get_health_intel():
-    feed = feedparser.parse(
-        "https://www.who.int/feeds/entity/csr/don/en/rss.xml"
-    )
-
-    entries = []
-    for item in feed.entries[:3]:
-        entries.append(f"{item.title}: {item.summary}")
-
-    return "\n".join(entries)
+    return safe_fetch("https://www.who.int/emergencies/disease-outbreak-news")
 
 
 def get_energy_intel():
-    feed = feedparser.parse(
-        "https://www.eia.gov/rss/press_rss.xml"
-    )
-
-    entries = []
-    for item in feed.entries[:3]:
-        entries.append(f"{item.title}: {item.summary}")
-
-    return "\n".join(entries)
+    return safe_fetch("https://www.eia.gov/todayinenergy/")
