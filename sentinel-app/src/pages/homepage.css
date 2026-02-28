@@ -72,12 +72,10 @@
   flex-shrink: 0;
 }
 
-.nationLogo
-{
-  height: 100px;
-  width: auto;
-  flex-shrink: 0;
-  margin-left: 80%;
+.nationLogo {
+  height: 70px;
+  margin-left: auto; /* pushes it to the right */
+  margin-right: 16px;
 }
 
 .brandText {
@@ -177,20 +175,96 @@
 
 .presBrief_container {
   position: fixed;
-  top: 11%;
+  top: 10%;
   right: 35px;
 
   background: rgb(5, 0, 29);
   border: 2px solid rgb(84, 84, 84);
   border-radius: 15px;
 
-  width: 17%;
-  min-height: 300px;   /* key: gives it visible height */
+  width: 18%;
+  min-height: 250px;   /* key: gives it visible height */
   padding: 16px;       /* key: gives space inside */
   z-index: 9;       /* key: keeps it on top */
 }
 
 .PB_title
 {
-  font-size: 16px;
+  font-size: 26px;
+  font-family: "Roboto", Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  position: relative;
+  margin-left: 10px;
+}
+
+/* THIS IS THE BOX INSIDE */
+.presBrief_box {
+  width: 65%;
+  margin-top: 12px;
+  margin-left: 10px;
+
+  padding: 14px;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+
+  padding-left: 15px; /* optional, if you want left offset */
+}
+
+
+.checkMark {
+  font-weight: 700;
+  color: rgba(0, 255, 120, 0.9); /* optional: make it green */
+  line-height: 1;
+  margin-right: 0;
+  font-size: large;
+}
+
+.boxText {
+  line-height: 1;
+  font-size: 18px;
+}
+
+.reviewBreif_button {
+  width: 40%;
+  margin-top: 80px;
+  margin-left: 10px;
+  padding: 12px 14px;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  font-size: 20px;
+  font-family: "Roboto", Arial, sans-serif;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 0.05em;
+
+  cursor: pointer;
+  transition: transform 0.5s ease, background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+}
+
+.reviewBreif_button:hover {
+  background: rgba(0, 255, 120, 0.18);
+  border-color: rgba(0, 255, 120, 0.75);
+  box-shadow: 0 0 16px rgba(0, 255, 120, 0.25);
+  transform: translateY(-1px);
+}
+
+.reviewBreif_button:active {
+  transform: translateY(0px);
 }

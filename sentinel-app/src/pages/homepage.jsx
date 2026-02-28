@@ -20,15 +20,19 @@ const Homepage = () => {
         </div>
         <img className="nationLogo" src="/americanFlag.png" alt="america" />
         <div className="securityStatus">
-          <img className="lock"src="lock-icon.png"alt=""/>
+          <img className="lock" src="/lock-icon.png" alt="" />
           <p>SECURED</p>
         </div>
       </header>
 
       <div className="presBrief_container">
-        <h1 className="PB_title"> Daily President Briefing </h1>
+        <h1 className="PB_title">Daily President Briefing</h1>
 
-
+        <div className="presBrief_box">
+            <span className="checkMark">✔</span>
+            <span className="boxText">Ready for Review</span>
+        </div>
+        <button className="reviewBreif_button" type="button">Review Now</button>
       </div>
     </div>
   );
