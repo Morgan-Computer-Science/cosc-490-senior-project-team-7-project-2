@@ -5,6 +5,7 @@
 }
 
 
+/* (Begin) Navigation Bar */
 
 .topRect {
   position: fixed;
@@ -25,17 +26,23 @@
   position: fixed;
 }
 
-.Logout {
-  width: 175px;
-  height: 50px;
-  border-radius: 10px;
+
+.Logout 
+{
+   width: 225px;
+  height: 65px;
+  padding: 20px;
+  background-color: #1e1e2f;
+  color: white;
+  border-radius: 12px;
+  font-size: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.563);
 
   font-family: "Roboto", Arial, sans-serif;
-  background: rgba(149, 149, 149, 0.333);
   border: 2px solid rgb(79, 79, 79);
 
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background 1.5s ease, border-color 1.5s ease, color 1.5s ease;
 }
 
 .Logout:hover {
@@ -65,6 +72,14 @@
   flex-shrink: 0;
 }
 
+.nationLogo
+{
+  height: 100px;
+  width: auto;
+  flex-shrink: 0;
+  margin-left: 80%;
+}
+
 .brandText {
   display: flex;
   flex-direction: column;
@@ -72,15 +87,23 @@
   /* transform: translateX(-10%); */
 }
 
-.heading {
+.lock
+{
+  height: 40px;
+  width: auto;
+  margin-right: 25px;
+}
+
+.heading  
+{
   margin: 0;
   font-family: "Times New Roman", Times, serif;
   font-size: 52px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   font-weight: 800;
   line-height: 1;
-  left: -27.5%;
+  left: 0%;
   position: relative;
 
   background: linear-gradient(
@@ -101,8 +124,73 @@
 .subHeading {
   margin: 6px 0 0 0;
   font-family: "Roboto", Arial, sans-serif;
-  font-weight: 300;
-  font-size: 16px;
+  font-weight: 250;
+  font-size: 19px;
   line-height: 1.1;
   color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.4em;
+}
+
+.securityStatus
+{
+  width: 225px;
+  height: 65px;
+  padding: 20px;
+  background-color: #1e1e2f;
+  color: white;
+  border-radius: 12px;
+  font-size: 20px;
+  border: 2px solid rgb(79, 79, 79);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 75px;
+  font-weight: 600;
+
+  animation: greenPulse 4.0s ease-in-out infinite;
+}
+
+/* ScuritySatus FX */
+
+@keyframes greenPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(0, 255, 120, 0);
+    border-color: rgb(79, 79, 79);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(0, 255, 120, 0.65);
+    border-color: rgba(0, 255, 120, 0.9);
+  }
+}
+
+/* ------------------ (End) Navigation Bar ------------------ */
+
+
+
+
+
+
+
+/* (Begin) Daily President Briefing container */
+
+
+.presBrief_container {
+  position: fixed;
+  top: 11%;
+  right: 35px;
+
+  background: rgb(5, 0, 29);
+  border: 2px solid rgb(84, 84, 84);
+  border-radius: 15px;
+
+  width: 17%;
+  min-height: 300px;   /* key: gives it visible height */
+  padding: 16px;       /* key: gives space inside */
+  z-index: 9;       /* key: keeps it on top */
+}
+
+.PB_title
+{
+  font-size: 16px;
 }

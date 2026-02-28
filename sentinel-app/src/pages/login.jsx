@@ -38,8 +38,8 @@ const Login = () => {
       <img className="backgroundImg" src="/situation_room.png" alt="" />
 
       <div className="container">
-        <h1 className="heading">SENTINEL</h1>
-        <h2 className="subHeading">
+        <h1 className="heading_login">SENTINEL</h1>
+        <h2 className="subHeading_login">
           Strategic Executive Network for Threat Evaluation and National Leadership
         </h2>
 

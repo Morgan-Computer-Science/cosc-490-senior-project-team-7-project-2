@@ -58,10 +58,11 @@
 }
 
 
-.heading {
+.heading_login
+{
   font-family: "Times New Roman", Times, serif;
   font-size: 75px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   margin: 0;
   text-align: center;
@@ -90,9 +91,9 @@
 }
 
 
-.subHeading
+.subHeading_login
 {
-    font-size:medium;
+    font-size: 19px;
     letter-spacing: 0.1em;
     font-family: "Roboto", Arial, sans-serif;
     margin-top: 10px;

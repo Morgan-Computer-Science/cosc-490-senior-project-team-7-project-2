@@ -9,7 +9,7 @@ const Homepage = () => {
         </button>
 
         <div className="brandRow">
-          <img className="homeLogo" src="/president_logo.png" alt="Seal" />
+          <img className="homeLogo" src="/president_logo.png" alt="eagle" />
 
           <div className="brandText">
             <h1 className="heading">SENTINEL</h1>
@@ -18,7 +18,18 @@ const Homepage = () => {
             </h2>
           </div>
         </div>
+        <img className="nationLogo" src="/americanFlag.png" alt="america" />
+        <div className="securityStatus">
+          <img className="lock"src="lock-icon.png"alt=""/>
+          <p>SECURED</p>
+        </div>
       </header>
+
+      <div className="presBrief_container">
+        <h1 className="PB_title"> Daily President Briefing </h1>
+
+
+      </div>
     </div>
   );
 };
