@@ -1,0 +1,12 @@
+{
+  "name": "sentinel-econ-backend",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

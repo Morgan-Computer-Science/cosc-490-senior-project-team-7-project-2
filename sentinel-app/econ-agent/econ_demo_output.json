@@ -1,0 +1,244 @@
+{
+  "evidence": {
+    "CPI": {
+      "ok": true,
+      "seriesId": "CPIAUCSL",
+      "date": "2026-01-01",
+      "value": 326.588,
+      "sourceUrl": "https://fred.stlouisfed.org/series/CPIAUCSL"
+    },
+    "CORE_CPI": {
+      "ok": true,
+      "seriesId": "CPILFESL",
+      "date": "2026-01-01",
+      "value": 332.793,
+      "sourceUrl": "https://fred.stlouisfed.org/series/CPILFESL"
+    },
+    "UNEMPLOYMENT": {
+      "ok": true,
+      "seriesId": "UNRATE",
+      "date": "2026-01-01",
+      "value": 4.3,
+      "sourceUrl": "https://fred.stlouisfed.org/series/UNRATE"
+    },
+    "PAYROLLS": {
+      "ok": true,
+      "seriesId": "PAYEMS",
+      "date": "2026-01-01",
+      "value": 158627,
+      "sourceUrl": "https://fred.stlouisfed.org/series/PAYEMS"
+    },
+    "GAS": {
+      "ok": true,
+      "seriesId": "GASREGW",
+      "date": "2026-03-02",
+      "value": 3.015,
+      "sourceUrl": "https://fred.stlouisfed.org/series/GASREGW"
+    },
+    "RENT": {
+      "ok": true,
+      "seriesId": "CUSR0000SEHA",
+      "date": "2026-01-01",
+      "value": 441.285,
+      "sourceUrl": "https://fred.stlouisfed.org/series/CUSR0000SEHA"
+    }
+  },
+  "subOutputs": [
+    {
+      "agent": "Prices and Cost of Living Agent",
+      "classification": "prices",
+      "key_findings": [
+        "CPI latest value is 326.588 on 2026-01-01",
+        "Core CPI latest value is 332.793 on 2026-01-01",
+        "Rent index latest value is 441.285 on 2026-01-01"
+      ],
+      "risks": [
+        "Blunt subsidies can raise prices if supply is fixed, focus on targeted and time limited design",
+        "Housing actions take time, set expectations and pair with near term stabilization steps"
+      ],
+      "actions_60_90_days": [
+        "Target short term relief to rent burdened households using time limited support tied to income and local rent indexes",
+        "Increase near term housing supply throughput by pushing federal permitting support and technical assistance to cities that approve multi family starts",
+        "Enforce competition rules in concentrated consumer categories, prioritize price transparency and anti price gouging investigations where evidence exists",
+        "Reduce month to month cost pressures by expanding access to energy assistance and utility bill smoothing programs for vulnerable households"
+      ],
+      "requires_more_data": false,
+      "claims": [
+        {
+          "claim": "Latest CPI pulled from FRED",
+          "support": "evidence",
+          "evidence_keys": [
+            "CPI"
+          ]
+        },
+        {
+          "claim": "Latest Core CPI pulled from FRED",
+          "support": "evidence",
+          "evidence_keys": [
+            "CORE_CPI"
+          ]
+        },
+        {
+          "claim": "Latest rent index pulled from FRED",
+          "support": "evidence",
+          "evidence_keys": [
+            "RENT"
+          ]
+        }
+      ]
+    },
+    {
+      "agent": "Jobs and Labor Agent",
+      "classification": "jobs",
+      "key_findings": [
+        "Unemployment rate latest value is 4.3 on 2026-01-01",
+        "Payroll employment latest value is 158627 on 2026-01-01"
+      ],
+      "risks": [
+        "Overheating demand can worsen inflation, pair job support with supply side actions",
+        "Poorly targeted programs waste money, require metrics and regional triggers"
+      ],
+      "actions_60_90_days": [
+        "Accelerate hiring in critical public service roles using time boxed fast track hiring and retention bonuses where shortages are documented",
+        "Expand rapid reemployment support in high layoff sectors through short credential programs tied to local employer demand",
+        "Use procurement and small business lending levers to protect jobs in regions showing weakening labor indicators",
+        "Coordinate with the central bank on messaging, avoid policy whiplash that damages hiring confidence"
+      ],
+      "requires_more_data": false,
+      "claims": [
+        {
+          "claim": "Latest unemployment pulled from FRED",
+          "support": "evidence",
+          "evidence_keys": [
+            "UNEMPLOYMENT"
+          ]
+        },
+        {
+          "claim": "Latest payrolls pulled from FRED",
+          "support": "evidence",
+          "evidence_keys": [
+            "PAYROLLS"
+          ]
+        }
+      ]
+    },
+    {
+      "agent": "Energy and Oil Agent",
+      "classification": "energy",
+      "key_findings": [
+        "Regular gas price latest value is 3.015 on 2026-03-02"
+      ],
+      "risks": [
+        "Energy shocks can feed headline inflation quickly"
+      ],
+      "actions_60_90_days": [
+        "If verified supply disruption exists, coordinate short term stabilization steps with energy agencies and states",
+        "Increase price transparency and enforcement focus in regions showing abnormal spreads between wholesale and retail prices",
+        "Expand targeted energy assistance for households facing utility and fuel burden"
+      ],
+      "requires_more_data": false,
+      "claims": [
+        {
+          "claim": "Latest regular gas price pulled from FRED",
+          "support": "evidence",
+          "evidence_keys": [
+            "GAS"
+          ]
+        }
+      ]
+    },
+    {
+      "agent": "Transportation and Infrastructure Agent",
+      "classification": "transportation",
+      "key_findings": [
+        "No live transport cost series pulled in this minimal build"
+      ],
+      "risks": [
+        "Port or trucking disruptions can raise prices and delay supply"
+      ],
+      "actions_60_90_days": [
+        "Clear logistics bottlenecks by expanding port hours and simplifying inspections where safe",
+        "Support trucker capacity with temporary operational fixes and targeted maintenance funding",
+        "Prioritize repairs on choke points that reduce delivery times for food and essentials"
+      ],
+      "requires_more_data": true,
+      "claims": [
+        {
+          "claim": "No transport evidence included in this run",
+          "support": "general",
+          "evidence_keys": []
+        }
+      ]
+    }
+  ],
+  "verifierProblems": [],
+  "finalOut": {
+    "topic": "economy",
+    "question": "Gas prices are up and rent feels high. What should the president do in the next 60 to 90 days?",
+    "what_we_know_from_data": [
+      "CPI: 326.588 as of 2026-01-01",
+      "CORE_CPI: 332.793 as of 2026-01-01",
+      "UNEMPLOYMENT: 4.3 as of 2026-01-01",
+      "PAYROLLS: 158627 as of 2026-01-01",
+      "GAS: 3.015 as of 2026-03-02",
+      "RENT: 441.285 as of 2026-01-01"
+    ],
+    "recommendations_60_90_days": [
+      "Target short term relief to rent burdened households using time limited support tied to income and local rent indexes",
+      "Increase near term housing supply throughput by pushing federal permitting support and technical assistance to cities that approve multi family starts",
+      "Enforce competition rules in concentrated consumer categories, prioritize price transparency and anti price gouging investigations where evidence exists",
+      "Reduce month to month cost pressures by expanding access to energy assistance and utility bill smoothing programs for vulnerable households",
+      "Accelerate hiring in critical public service roles using time boxed fast track hiring and retention bonuses where shortages are documented",
+      "Expand rapid reemployment support in high layoff sectors through short credential programs tied to local employer demand",
+      "Use procurement and small business lending levers to protect jobs in regions showing weakening labor indicators",
+      "Coordinate with the central bank on messaging, avoid policy whiplash that damages hiring confidence"
+    ],
+    "tradeoffs_and_risks": [
+      "Blunt subsidies can raise prices if supply is fixed, focus on targeted and time limited design",
+      "Housing actions take time, set expectations and pair with near term stabilization steps",
+      "Overheating demand can worsen inflation, pair job support with supply side actions",
+      "Poorly targeted programs waste money, require metrics and regional triggers",
+      "Energy shocks can feed headline inflation quickly",
+      "Port or trucking disruptions can raise prices and delay supply"
+    ],
+    "what_to_measure_next": [
+      "Monthly CPI and core CPI trend",
+      "Weekly gasoline price benchmarks if available",
+      "Unemployment rate and labor force participation",
+      "Payroll growth and hours worked",
+      "Rent inflation indicators from private and public sources"
+    ],
+    "evidence_used": {
+      "CPI": {
+        "date": "2026-01-01",
+        "value": 326.588,
+        "sourceUrl": "https://fred.stlouisfed.org/series/CPIAUCSL"
+      },
+      "CORE_CPI": {
+        "date": "2026-01-01",
+        "value": 332.793,
+        "sourceUrl": "https://fred.stlouisfed.org/series/CPILFESL"
+      },
+      "UNEMPLOYMENT": {
+        "date": "2026-01-01",
+        "value": 4.3,
+        "sourceUrl": "https://fred.stlouisfed.org/series/UNRATE"
+      },
+      "PAYROLLS": {
+        "date": "2026-01-01",
+        "value": 158627,
+        "sourceUrl": "https://fred.stlouisfed.org/series/PAYEMS"
+      },
+      "GAS": {
+        "date": "2026-03-02",
+        "value": 3.015,
+        "sourceUrl": "https://fred.stlouisfed.org/series/GASREGW"
+      },
+      "RENT": {
+        "date": "2026-01-01",
+        "value": 441.285,
+        "sourceUrl": "https://fred.stlouisfed.org/series/CUSR0000SEHA"
+      }
+    }
+  }
+}
