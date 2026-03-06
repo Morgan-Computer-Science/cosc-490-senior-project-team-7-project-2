@@ -178,93 +178,315 @@
   top: 10%;
   right: 35px;
 
-  background: rgb(5, 0, 29);
-  border: 2px solid rgb(84, 84, 84);
+  width: 22.8%;
+  min-height: 254px;
+  padding: 16px;
+
+  overflow: hidden;
   border-radius: 15px;
 
-  width: 18%;
-  min-height: 250px;   /* key: gives it visible height */
-  padding: 16px;       /* key: gives space inside */
-  z-index: 9;       /* key: keeps it on top */
+  /* base */
+  background: linear-gradient(180deg, rgba(10, 25, 60, 0.92), rgba(5, 0, 29, 0.92));
+  border: 1px solid rgba(120, 170, 255, 0.22);
+
+  box-shadow:
+    0 18px 45px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+
+  z-index: 9;
+}
+
+.presBrief_container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(120,180,255,0.18), transparent 55%),
+    radial-gradient(120% 140% at 50% 100%, rgba(0,0,0,0.55), transparent 60%);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0.95;
+}
+
+.presBrief_container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background-image: radial-gradient(rgba(140,190,255,0.22) 1px, transparent 1px);
+  background-size: 18px 18px;
+
+  opacity: 0.10;
+  mix-blend-mode: screen;
+}
+
+/* keep content above overlays */
+.presBrief_container > * {
+  position: relative;
+  z-index: 1;
 }
 
 .PB_title
 {
-  font-size: 26px;
+  font-size: 20px;
   font-family: "Roboto", Arial, sans-serif;
-  font-weight: 300;
   letter-spacing: 0.15em;
-  position: relative;
-  margin-left: 10px;
+  font-weight: 300;
+  text-transform: uppercase;
 }
 
-/* THIS IS THE BOX INSIDE */
-.presBrief_box {
-  width: 65%;
-  margin-top: 12px;
-  margin-left: 10px;
+.presBrief_box 
+{
+  width: 60%;
+  height: 50px;
+  margin-top: 15px;
+  margin-left: 0;
 
-  padding: 14px;
-
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  padding: 14px 16px;
 
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
+  gap: 12px;
 
-  padding-left: 15px; /* optional, if you want left offset */
-}
-
-
-.checkMark {
-  font-weight: 700;
-  color: rgba(0, 255, 120, 0.9); /* optional: make it green */
-  line-height: 1;
-  margin-right: 0;
-  font-size: large;
-}
-
-.boxText {
-  line-height: 1;
-  font-size: 18px;
-}
-
-.reviewBreif_button {
-  width: 40%;
-  margin-top: 80px;
-  margin-left: 10px;
-  padding: 12px 14px;
+  border-radius: 12px;
 
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border: 1px solid rgba(120, 190, 255, 0.18);
 
-  display: flex;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 10px 25px rgba(0,0,0,0.35);
+}
+
+.checkMark 
+{
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 999px;
+
+  background: rgba(0, 255, 120, 0.10);
+  border: 1px solid rgba(0, 255, 120, 0.35);
+  box-shadow: 0 0 16px rgba(0, 255, 120, 0.18);
+
+  color: rgba(0, 255, 120, 0.95);
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1;
+}
+
+
+.boxText 
+{
+  font-family: "Roboto", Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+
+  color: rgba(255,255,255,0.92);
+}
+
+.reviewBreif_button 
+{
+  width: 50%;
+  height: 48px;
+  margin-top: 12%;
+  margin-left: 0;
+
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+
+  padding: 0 16px;
+  border-radius: 12px;
+
+  font-family: "Roboto", Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+
+  color: rgba(255, 255, 255, 0.92);
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.10),
+    rgba(255, 255, 255, 0.05)
+  );
+
+  border: 1px solid rgba(120, 190, 255, 0.22);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 14px 28px rgba(0,0,0,0.45);
+
+  cursor: pointer;
+  outline: none;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+.reviewBreif_button:hover 
+{
+  border-color: rgba(90, 170, 255, 0.60);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 16px 32px rgba(0,0,0,0.55),
+    0 0 18px rgba(70, 150, 255, 0.20);
+
+  transform: translateY(-1px);
+}
+
+.reviewBreif_button:active 
+{
+  transform: translateY(0px);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 10px 22px rgba(0,0,0,0.45);
+}
+
+.reviewBreif_button:focus-visible 
+{
+  border-color: rgba(90, 190, 255, 0.85);
+  box-shadow:
+    0 0 0 3px rgba(90, 190, 255, 0.20),
+    0 16px 32px rgba(0,0,0,0.55);
+}
+/* ------------------ (End) Daily President Briefing container ------------------ */
+
+
+
+
+/* (begin) Decision Center container */
+
+
+.decision_center {
+  position: fixed;
+  top: 10%;
+  right: 26%;
+
+  width: 40%;
+  min-height: 252px;
+
+  border-radius: 16px;
+  overflow: hidden;
+
+  /* depth */
+  background: linear-gradient(
+    180deg,
+    rgba(10, 18, 48, 0.92),
+    rgba(5, 0, 29, 0.92)
+  );
+
+  border: 1px solid rgba(120, 170, 255, 0.22);
+
+  box-shadow:
+    0 22px 55px rgba(0,0,0,0.60),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+
+  padding: 14px 16px;
+}
+
+/* glass haze + vignette */
+.decision_center::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(120,180,255,0.16), transparent 55%),
+    radial-gradient(120% 140% at 50% 110%, rgba(0,0,0,0.55), transparent 60%),
+    linear-gradient(90deg, rgba(255, 200, 90, 0.05), transparent 30%, transparent 70%, rgba(80, 160, 255, 0.08));
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0.95;
+}
+
+/* grid texture */
+.decision_center::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background-image: radial-gradient(rgba(140,190,255,0.20) 1px, transparent 1px);
+  background-size: 20px 20px;
+
+  opacity: 0.08;
+  mix-blend-mode: screen;
+}
+
+/* keep content above overlays */
+.decision_center > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* realistic title placement, no weird margin-left 40% */
+.DC_title {
+  margin: 0;
+  margin-left: 36%;;
+  padding: 10px 12px;
 
   font-size: 20px;
   font-family: "Roboto", Arial, sans-serif;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.88);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 
-  cursor: pointer;
-  transition: transform 0.5s ease, background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+  color: rgba(255,255,255,0.90);
+
+  border-radius: 12px;
 }
 
-.reviewBreif_button:hover {
-  background: rgba(0, 255, 120, 0.18);
-  border-color: rgba(0, 255, 120, 0.75);
-  box-shadow: 0 0 16px rgba(0, 255, 120, 0.25);
-  transform: translateY(-1px);
+/* Make the input feel like a living console */
+.DC_inputSection {
+  margin-top: 14px;
+  width: 100%;
+
+  border-radius: 14px;
 }
 
-.reviewBreif_button:active {
-  transform: translateY(0px);
+.dc_label 
+{
+  display: block;     /* makes margin auto work */
+  margin: 0 auto;     /* centers horizontally */
+
+  width: 75%;
+  height: 52px;
+
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  color: rgba(255, 255, 255, 0.92);
+  padding: 0 18px;
+
+  outline: none;
+  caret-color: rgba(120, 190, 255, 0.95);
+
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.dc_labelText
+{
+  display: none;
+  text-align: center;
 }

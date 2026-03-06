@@ -25,6 +25,7 @@ const Homepage = () => {
         </div>
       </header>
 
+
       <div className="presBrief_container">
         <h1 className="PB_title">Daily President Briefing</h1>
 
@@ -33,6 +34,26 @@ const Homepage = () => {
             <span className="boxText">Ready for Review</span>
         </div>
         <button className="reviewBreif_button" type="button">Review Now</button>
+      </div>
+
+
+      <div className="decision_center">
+        <h1 className="DC_title">Decision Center</h1>
+
+        <div className="DC_inputSection">
+
+          <input
+            id="Command"
+            className="dc_label"
+            placeholder="Ask Sentinel ?"
+          />
+
+
+        </div>
+
+
+
+
       </div>
     </div>
   );
