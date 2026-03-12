@@ -1,9 +1,11 @@
 from google.adk.agents import LlmAgent, SequentialAgent
 from google.adk.tools import google_search, FunctionTool
 
-# ─────────────────────────────────────────
+
+
 # HUMAN-IN-THE-LOOP TOOL
-# ─────────────────────────────────────────
+
+
 
 def request_human_review(
     claim: str,
@@ -36,11 +38,14 @@ def request_human_review(
         reason = input("Reason for rejection (optional): ").strip()
         return f"REJECTED - do not include this claim. Reason: {reason}"
 
+
 hitl_tool = FunctionTool(func=request_human_review)
 
-# ─────────────────────────────────────────
+
+
 # SHARED ANTI-HALLUCINATION RULES
-# ─────────────────────────────────────────
+
+
 
 ANTI_HALLUCINATION_RULES = """
 ANTI-HALLUCINATION RULES - YOU MUST FOLLOW THESE AT ALL TIMES:
@@ -58,9 +63,11 @@ ANTI-HALLUCINATION RULES - YOU MUST FOLLOW THESE AT ALL TIMES:
 - Wikipedia is not acceptable regardless of the topic or urgency
 """
 
-# ─────────────────────────────────────────
+
+
 # INTERNATIONAL RELATIONS AGENT
-# ─────────────────────────────────────────
+
+
 
 international_relations_agent = LlmAgent(
     name="InternationalRelationsAgent",
@@ -129,9 +136,174 @@ international_relations_agent = LlmAgent(
         """ + ANTI_HALLUCINATION_RULES,
 )
 
-# ─────────────────────────────────────────
+
+
+# INTERNATIONAL PIPELINE — SEARCH VERIFIER, HITL, AGGREGATOR
+
+
+
+int_search_verifier_agent = LlmAgent(
+    name="IntSearchVerifierAgent",
+    model="gemini-2.0-flash",
+    description="Independently searches to verify all claims in international relations specialist output.",
+    output_key="verification_search_output",
+    tools=[google_search],
+    instruction="""
+        You are a senior intelligence verification researcher.
+        Your job is to independently search for and verify every
+        claim made in the specialist output below.
+
+        SPECIALIST OUTPUT TO VERIFY:
+        {specialist_output}
+
+        YOUR VERIFICATION PROCESS:
+
+        STEP 1 - INDEPENDENTLY SEARCH:
+        For every claim in the specialist output, use google_search
+        to independently verify it yourself. Do not trust the
+        specialist's sources without checking them yourself.
+        Search at least 2-3 times per major claim using different
+        query angles. Discard any Wikipedia results immediately
+        and search again.
+
+        STEP 2 - CHECK FOR HALLUCINATION RED FLAGS:
+        - Does the URL actually exist and load correctly?
+        - Does the source actually say what the specialist claims?
+        - Can the statistic or quote be found in search results?
+        - Does the event or policy actually appear in news sources?
+        - Is the source genuinely credible or just superficially named?
+        - Is any source Wikipedia? If yes, flag it as unacceptable
+
+        STEP 3 - CLASSIFY EVERY CLAIM:
+        VERIFIED: You independently confirmed this via search
+        NEEDS REVIEW: Partially supported or weakly sourced
+        HALLUCINATED: Cannot be verified or appears fabricated
+        UNACCEPTABLE SOURCE: Sourced from Wikipedia or non-credible site
+
+        STEP 4 - OUTPUT YOUR VERIFICATION RESULTS:
+
+        VERIFICATION SEARCH REPORT:
+        VERIFIED: [List verified claims with your confirmation source and URL]
+        NEEDS REVIEW: [List claims needing more evidence, explain why]
+        HALLUCINATED: [List fabricated or unverifiable claims]
+        UNACCEPTABLE SOURCE: [List any Wikipedia or non-credible sources]
+
+        OVERALL RELIABILITY: [High / Medium / Low]
+        NOTES: [Any additional context for the fact checker]
+
+        """ + ANTI_HALLUCINATION_RULES,
+)
+
+int_fact_checker_agent = LlmAgent(
+    name="IntFactCheckerAgent",
+    model="gemini-2.0-flash",
+    description="Reviews verification results and triggers human-in-the-loop review when required for international relations responses.",
+    output_key="fact_check_output",
+    tools=[hitl_tool],
+    instruction="""
+        You are a senior intelligence verification officer.
+        Your job is to review the independent verification results
+        and ensure no unverified or fabricated information reaches
+        the President of the United States.
+
+        You will receive:
+        - Original specialist output: {specialist_output}
+        - Independent verification results: {verification_search_output}
+
+        YOUR PROCESS:
+
+        STEP 1 - REVIEW VERIFICATION RESULTS:
+        Carefully review the verification search report.
+        Note which claims are VERIFIED, NEEDS REVIEW,
+        HALLUCINATED, or UNACCEPTABLE SOURCE.
+
+        STEP 2 - HUMAN REVIEW TRIGGER:
+        You MUST use the request_human_review tool if ANY of these are true:
+        - OVERALL RELIABILITY is Medium or Low
+        - Any claim is marked HALLUCINATED
+        - Any claim is marked UNACCEPTABLE SOURCE
+        - A source URL returns no results or appears fabricated
+        - The claim involves specific statistics or direct quotes
+          that cannot be independently confirmed
+
+        Call request_human_review once per flagged claim,
+        passing the claim text, sources, and confidence level.
+
+        STEP 3 - OUTPUT YOUR FINAL REPORT:
+
+        FACT CHECK REPORT:
+        VERIFIED: [List verified claims with confirmation source]
+        NEEDS REVIEW: [List claims needing more evidence]
+        HALLUCINATED: [List fabricated or unverifiable claims]
+        UNACCEPTABLE SOURCE: [List any Wikipedia or non-credible sources]
+        HUMAN REVIEW OUTCOMES: [List any human review decisions received]
+
+        OVERALL RELIABILITY: [High / Medium / Low]
+        RECOMMENDATION: [Pass / Revise / Reject]
+        NOTES: [Any additional context for the aggregator]
+    """,
+)
+
+int_aggregator_agent = LlmAgent(
+    name="IntAggregatorAgent",
+    model="gemini-2.0-flash",
+    description="Formats the final verified international relations presidential briefing.",
+    output_key="final_output",
+    instruction="""
+        You are the chief of staff finalizing an intelligence briefing
+        for the President of the United States.
+
+        You will receive:
+        - Specialist research: {specialist_output}
+        - Fact-check report: {fact_check_output}
+
+        YOUR RULES:
+        - Only include claims marked VERIFIED in the final briefing
+        - Never include HALLUCINATED or UNACCEPTABLE SOURCE claims
+        - For NEEDS REVIEW claims — only include if human approved them
+        - Never include any claim with CONFIDENCE: Low
+        - Never use Wikipedia as a source
+        - If RECOMMENDATION is Reject respond with:
+          "Mr./Madam President, our intelligence team was unable to find
+           sufficiently verified information on this topic at this time.
+           We recommend consulting [suggest a relevant credible source]
+           directly for the most accurate and current information."
+        - Never fill gaps with assumptions or internal knowledge
+
+        FORMAT THE FINAL PRESIDENTIAL BRIEFING LIKE THIS:
+
+        Mr./Madam President,
+
+        BRIEFING SUMMARY:
+        [One clear paragraph summarizing the key finding directly
+        and concisely for the President]
+
+        DETAILED BRIEFING:
+        [Full well-structured briefing using only verified claims,
+        written in formal presidential briefing style. Walk through
+        the reasoning so the President understands how conclusions
+        were reached.]
+
+        SOURCES USED:
+        [List every verified source with name and URL]
+
+        ITEMS REQUIRING YOUR ATTENTION:
+        [Flag anything that needs a presidential decision,
+        immediate action, or further follow-up]
+
+        LIMITATIONS:
+        [Note anything that could not be fully verified, any gaps
+        in available intelligence, or topics needing further research]
+
+        Respectfully submitted for your review, Mr./Madam President.
+    """,
+)
+
+
+
 # DOMESTIC POLICY AGENT
-# ─────────────────────────────────────────
+
+
 
 domestic_policy_agent = LlmAgent(
     name="DomesticPolicyAgent",
@@ -201,22 +373,24 @@ domestic_policy_agent = LlmAgent(
         """ + ANTI_HALLUCINATION_RULES,
 )
 
-# ─────────────────────────────────────────
-# INTERNATIONAL PIPELINE — FACT CHECKER & AGGREGATOR
-# ─────────────────────────────────────────
 
-int_fact_checker_agent = LlmAgent(
-    name="IntFactCheckerAgent",
+
+# DOMESTIC PIPELINE — SEARCH VERIFIER, HITL, AGGREGATOR
+
+
+
+dom_search_verifier_agent = LlmAgent(
+    name="DomSearchVerifierAgent",
     model="gemini-2.0-flash",
-    description="Independently verifies all claims for international relations responses before they reach the President.",
-    output_key="fact_check_output",
-    tools=[hitl_tool],
+    description="Independently searches to verify all claims in domestic policy specialist output.",
+    output_key="verification_search_output",
+    tools=[google_search],
     instruction="""
-        You are a senior intelligence verification officer.
-        Your job is to ensure no unverified or fabricated information
-        reaches the President of the United States.
+        You are a senior policy verification researcher.
+        Your job is to independently search for and verify every
+        claim made in the specialist output below.
 
-        You will receive specialist output here:
+        SPECIALIST OUTPUT TO VERIFY:
         {specialist_output}
 
         YOUR VERIFICATION PROCESS:
@@ -225,7 +399,9 @@ int_fact_checker_agent = LlmAgent(
         For every claim in the specialist output, use google_search
         to independently verify it yourself. Do not trust the
         specialist's sources without checking them yourself.
-        Discard any Wikipedia results immediately.
+        Search at least 2-3 times per major claim using different
+        query angles. Discard any Wikipedia results immediately
+        and search again.
 
         STEP 2 - CHECK FOR HALLUCINATION RED FLAGS:
         - Does the URL actually exist and load correctly?
@@ -241,125 +417,44 @@ int_fact_checker_agent = LlmAgent(
         HALLUCINATED: Cannot be verified or appears fabricated
         UNACCEPTABLE SOURCE: Sourced from Wikipedia or non-credible site
 
-        STEP 4 - HUMAN REVIEW TRIGGER:
-        You MUST use the request_human_review tool if ANY of these are true:
-        - OVERALL RELIABILITY is Medium or Low
-        - Any claim is marked HALLUCINATED
-        - Any claim is marked UNACCEPTABLE SOURCE
-        - A source URL returns no results or appears fabricated
-        - The claim involves specific statistics or direct quotes
-          that cannot be independently confirmed
+        STEP 4 - OUTPUT YOUR VERIFICATION RESULTS:
 
-        STEP 5 - OUTPUT YOUR REPORT:
-
-        FACT CHECK REPORT:
-        VERIFIED: [List verified claims with your confirmation source]
-        NEEDS REVIEW: [List claims needing more evidence]
+        VERIFICATION SEARCH REPORT:
+        VERIFIED: [List verified claims with your confirmation source and URL]
+        NEEDS REVIEW: [List claims needing more evidence, explain why]
         HALLUCINATED: [List fabricated or unverifiable claims]
         UNACCEPTABLE SOURCE: [List any Wikipedia or non-credible sources]
 
         OVERALL RELIABILITY: [High / Medium / Low]
-        RECOMMENDATION: [Pass / Revise / Reject]
-        NOTES: [Any additional context for the aggregator]
-    """,
+        NOTES: [Any additional context for the fact checker]
+
+        """ + ANTI_HALLUCINATION_RULES,
 )
-
-int_aggregator_agent = LlmAgent(
-    name="IntAggregatorAgent",
-    model="gemini-2.0-flash",
-    description="Formats the final verified international relations presidential briefing.",
-    output_key="final_output",
-    instruction="""
-        You are the chief of staff finalizing an intelligence briefing
-        for the President of the United States.
-
-        You will receive:
-        - Specialist research: {specialist_output}
-        - Fact-check report: {fact_check_output}
-
-        YOUR RULES:
-        - Only include claims marked VERIFIED in the final briefing
-        - Never include HALLUCINATED or UNACCEPTABLE SOURCE claims
-        - For NEEDS REVIEW claims — only include if human approved them
-        - Never include any claim with CONFIDENCE: Low
-        - Never use Wikipedia as a source
-        - If RECOMMENDATION is Reject respond with:
-          "Mr./Madam President, our intelligence team was unable to find
-           sufficiently verified information on this topic at this time.
-           We recommend consulting [suggest a relevant credible source]
-           directly for the most accurate and current information."
-        - Never fill gaps with assumptions or internal knowledge
-
-        FORMAT THE FINAL PRESIDENTIAL BRIEFING LIKE THIS:
-
-        Mr./Madam President,
-
-        BRIEFING SUMMARY:
-        [One clear paragraph summarizing the key finding directly
-        and concisely for the President]
-
-        DETAILED BRIEFING:
-        [Full well-structured briefing using only verified claims,
-        written in formal presidential briefing style. Walk through
-        the reasoning so the President understands how conclusions
-        were reached.]
-
-        SOURCES USED:
-        [List every verified source with name and URL]
-
-        ITEMS REQUIRING YOUR ATTENTION:
-        [Flag anything that needs a presidential decision,
-        immediate action, or further follow-up]
-
-        LIMITATIONS:
-        [Note anything that could not be fully verified, any gaps
-        in available intelligence, or topics needing further research]
-
-        Respectfully submitted for your review, Mr./Madam President.
-    """,
-)
-
-# ─────────────────────────────────────────
-# DOMESTIC PIPELINE — FACT CHECKER & AGGREGATOR
-# ─────────────────────────────────────────
 
 dom_fact_checker_agent = LlmAgent(
     name="DomFactCheckerAgent",
     model="gemini-2.0-flash",
-    description="Independently verifies all claims for domestic policy responses before they reach the President.",
+    description="Reviews verification results and triggers human-in-the-loop review when required for domestic policy responses.",
     output_key="fact_check_output",
-    tools=[google_search, hitl_tool],
+    tools=[hitl_tool],
     instruction="""
         You are a senior policy verification officer.
-        Your job is to ensure no unverified or fabricated information
-        reaches the President of the United States.
+        Your job is to review the independent verification results
+        and ensure no unverified or fabricated information reaches
+        the President of the United States.
 
-        You will receive specialist output here:
-        {specialist_output}
+        You will receive:
+        - Original specialist output: {specialist_output}
+        - Independent verification results: {verification_search_output}
 
-        YOUR VERIFICATION PROCESS:
+        YOUR PROCESS:
 
-        STEP 1 - INDEPENDENTLY SEARCH:
-        For every claim in the specialist output, use google_search
-        to independently verify it yourself. Do not trust the
-        specialist's sources without checking them yourself.
-        Discard any Wikipedia results immediately.
+        STEP 1 - REVIEW VERIFICATION RESULTS:
+        Carefully review the verification search report.
+        Note which claims are VERIFIED, NEEDS REVIEW,
+        HALLUCINATED, or UNACCEPTABLE SOURCE.
 
-        STEP 2 - CHECK FOR HALLUCINATION RED FLAGS:
-        - Does the URL actually exist and load correctly?
-        - Does the source actually say what the specialist claims?
-        - Can the statistic or quote be found in search results?
-        - Does the event or policy actually appear in news sources?
-        - Is the source genuinely credible or just superficially named?
-        - Is any source Wikipedia? If yes, flag it as unacceptable
-
-        STEP 3 - CLASSIFY EVERY CLAIM:
-        VERIFIED: You independently confirmed this via search
-        NEEDS REVIEW: Partially supported or weakly sourced
-        HALLUCINATED: Cannot be verified or appears fabricated
-        UNACCEPTABLE SOURCE: Sourced from Wikipedia or non-credible site
-
-        STEP 4 - HUMAN REVIEW TRIGGER:
+        STEP 2 - HUMAN REVIEW TRIGGER:
         You MUST use the request_human_review tool if ANY of these are true:
         - OVERALL RELIABILITY is Medium or Low
         - Any claim is marked HALLUCINATED
@@ -368,13 +463,17 @@ dom_fact_checker_agent = LlmAgent(
         - The claim involves specific statistics or direct quotes
           that cannot be independently confirmed
 
-        STEP 5 - OUTPUT YOUR REPORT:
+        Call request_human_review once per flagged claim,
+        passing the claim text, sources, and confidence level.
+
+        STEP 3 - OUTPUT YOUR FINAL REPORT:
 
         FACT CHECK REPORT:
-        VERIFIED: [List verified claims with your confirmation source]
+        VERIFIED: [List verified claims with confirmation source]
         NEEDS REVIEW: [List claims needing more evidence]
         HALLUCINATED: [List fabricated or unverifiable claims]
         UNACCEPTABLE SOURCE: [List any Wikipedia or non-credible sources]
+        HUMAN REVIEW OUTCOMES: [List any human review decisions received]
 
         OVERALL RELIABILITY: [High / Medium / Low]
         RECOMMENDATION: [Pass / Revise / Reject]
@@ -437,33 +536,39 @@ dom_aggregator_agent = LlmAgent(
     """,
 )
 
-# ─────────────────────────────────────────
+
+
 # SEQUENTIAL PIPELINES
-# ─────────────────────────────────────────
+
+
 
 international_pipeline = SequentialAgent(
     name="InternationalPipeline",
-    description="Handles international relations questions through research, fact checking, human review, and aggregation for the President.",
+    description="Handles international relations questions through research, independent verification, human review, and aggregation for the President.",
     sub_agents=[
-        international_relations_agent,
-        int_fact_checker_agent,
-        int_aggregator_agent
+        international_relations_agent,   # 1. Research & search
+        int_search_verifier_agent,        # 2. Independent search verification
+        int_fact_checker_agent,           # 3. HITL review if needed
+        int_aggregator_agent,             # 4. Final briefing
     ]
 )
 
 domestic_pipeline = SequentialAgent(
     name="DomesticPipeline",
-    description="Handles domestic policy questions through research, fact checking, human review, and aggregation for the President.",
+    description="Handles domestic policy questions through research, independent verification, human review, and aggregation for the President.",
     sub_agents=[
-        domestic_policy_agent,
-        dom_fact_checker_agent,
-        dom_aggregator_agent
+        domestic_policy_agent,            # 1. Research & search
+        dom_search_verifier_agent,        # 2. Independent search verification
+        dom_fact_checker_agent,           # 3. HITL review if needed
+        dom_aggregator_agent,             # 4. Final briefing
     ]
 )
 
-# ─────────────────────────────────────────
+
+
 # ROOT AGENT
-# ─────────────────────────────────────────
+
+
 
 root_agent = LlmAgent(
     name="RootAgent",
