@@ -519,7 +519,7 @@
   align-items: center;
   gap: 40px;
   flex-wrap: wrap;
-  margin-top: 30px;
+  margin-top: 60px;
   width: 100%;
 
 }
@@ -527,13 +527,13 @@
 .buttonContainer button
 
 {
-  padding: 12px 20px;
+  padding: 15px 25px;
   border-radius: 12px;
   border: 1px solid rgba (255, 255, 255, 0.18);
   color: rgba(255, 255, 255, 0.95);
   font-family: "Roboto", Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 400;
   letter-spacing: 0.10em;
   text-transform: uppercase;
   cursor: pointer;

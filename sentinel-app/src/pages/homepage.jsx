@@ -62,9 +62,6 @@ const Homepage = () => {
 
           
         </div>
-
-        
-
       </div>
 
       <div className="nationalPriority_alt_Container">
