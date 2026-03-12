@@ -45,11 +45,22 @@ const Homepage = () => {
           <input
             id="Command"
             className="dc_label"
-            placeholder="Ask Sentinel ?"
+            placeholder="What would you like SENTINEL to analyze?"
           />
 
 
         </div>
+
+        <div className="buttonContainer">
+
+          <button className="domesticPolicy_btn">Domestic Policy</button>
+          <button className="economy_btn">Economy</button>
+          <button className="nationalSecurity_btn">National Security</button>
+          <button className="internationalRelation_btn">International Relation</button>
+          
+        </div>
+
+        
 
 
 
