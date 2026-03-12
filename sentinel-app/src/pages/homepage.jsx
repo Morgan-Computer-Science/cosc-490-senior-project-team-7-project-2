@@ -48,23 +48,36 @@ const Homepage = () => {
             placeholder="What would you like SENTINEL to analyze?"
           />
 
-
         </div>
 
         <div className="buttonContainer">
 
-          <button className="domesticPolicy_btn">Domestic Policy</button>
-          <button className="economy_btn">Economy</button>
-          <button className="nationalSecurity_btn">National Security</button>
-          <button className="internationalRelation_btn">International Relation</button>
+          <button className="domesticPolicy_btn" type="button">Domestic Policy</button>
+
+          <button className="economy_btn" type="button">Economy</button>
+
+          <button className="nationalSecurity_btn" type="button">National Security</button>
+
+          <button className="internationalRelation_btn" type="button">International Relation</button>
+
           
         </div>
 
         
 
+      </div>
+
+      <div className="nationalPriority_alt_Container">
+
+        <div className="NPA_topRow">
+          <h1 className="NPA_title">National Priority Alert</h1>
+          <span className="NPA_badge">HIGH</span>
+        </div>
 
 
-
+        <div className="NPA_bottomRow">
+          <button className="NPA_button" type="button">View Brief</button>
+        </div>
       </div>
     </div>
   );
