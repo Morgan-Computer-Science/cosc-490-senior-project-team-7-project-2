@@ -76,7 +76,7 @@ export default function Chatbot() {
 
         {isTyping && (
           <div className="msg-row bot">
-            <div className="msg-icon">🤖</div>
+            <div className="msg-icon"></div>
             <div className="typing-bubble">
               <div className="typing-dot" />
               <div className="typing-dot" />
