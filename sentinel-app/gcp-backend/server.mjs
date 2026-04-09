@@ -22,10 +22,8 @@ const FRED_SERIES = {
 };
 
 async function fredLatest(seriesId) {
-  const fredKey = process.env.FRED_API_KEY;
-  if (!fredKey || fredKey === "your_fred_key_here") {
-    return { seriesId, lastValue: null, lastDate: null, note: "FRED_API_KEY not set" };
-  }
+  const fredKey = process.env.FRED_API_KEY?.trim();
+  if (!fredKey || fredKey === "your_fred_key_here") return null;
 
   const url = new URL("https://api.stlouisfed.org/fred/series/observations");
   url.searchParams.set("api_key", fredKey);
@@ -34,24 +32,34 @@ async function fredLatest(seriesId) {
   url.searchParams.set("sort_order", "desc");
   url.searchParams.set("limit", "1");
 
-  const res = await fetch(url.toString());
-  if (!res.ok) return { seriesId, lastValue: null, lastDate: null, note: `FRED error ${res.status}` };
-
-  const data = await res.json();
-  const obs = data.observations?.[0];
-  if (!obs) return { seriesId, lastValue: null, lastDate: null, note: "No data" };
-
-  const value = Number(obs.value);
-  return {
-    seriesId,
-    lastValue: Number.isFinite(value) ? value : null,
-    lastDate: obs.date ?? null,
-  };
+  try {
+    const res = await fetch(url.toString());
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.warn(`FRED ${seriesId} → HTTP ${res.status}: ${body}`);
+      return null;
+    }
+    const data = await res.json();
+    const obs = data.observations?.[0];
+    if (!obs) return null;
+    const value = Number(obs.value);
+    return Number.isFinite(value)
+      ? { seriesId, lastValue: value, lastDate: obs.date ?? null }
+      : null;
+  } catch (e) {
+    console.warn(`FRED ${seriesId} fetch error:`, e.message);
+    return null;
+  }
 }
 
 async function fetchEconomicData() {
-  const results = await Promise.all(Object.values(FRED_SERIES).map(fredLatest));
-  return results;
+  const entries = Object.entries(FRED_SERIES);
+  const results = await Promise.all(entries.map(([name, id]) =>
+    fredLatest(id).then((r) => r ? { name, ...r } : null)
+  ));
+  // Only return valid results; if none, return null so the prompt skips live data
+  const valid = results.filter(Boolean);
+  return valid.length > 0 ? valid : null;
 }
 
 // ── Domain system prompts ────────────────────────────────────────────────────
@@ -60,7 +68,7 @@ const DOMAIN_PROMPTS = {
   Economy: (data) => `You are SENTINEL's Economy Intelligence Agent, briefing the President of the United States.
 Your role: analyze economic conditions and provide a clear, actionable presidential briefing.
 
-${data ? `LIVE ECONOMIC DATA (FRED):\n${JSON.stringify(data, null, 2)}\n` : ""}
+${data ? `LIVE ECONOMIC DATA (FRED — as of latest available):\n${data.map(d => `  ${d.name}: ${d.lastValue} (${d.lastDate})`).join("\n")}\n` : ""}
 Format your response as a structured briefing with:
 - **Situation Summary** (2-3 sentences)
 - **Key Indicators** (bullet points with data if available)
@@ -185,6 +193,58 @@ app.post("/api/chat", async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e?.message || String(e) });
+  }
+});
+
+// Streaming conversational chat (text appears word-by-word)
+app.post("/api/chat/stream", async (req, res) => {
+  try {
+    const { domain, messages } = req.body;
+    if (!domain) return res.status(400).json({ error: "domain is required" });
+    if (!messages?.length) return res.status(400).json({ error: "messages is required" });
+
+    let economicData = null;
+    if (domain === "Economy") {
+      economicData = await fetchEconomicData();
+    }
+
+    const systemPromptFn = DOMAIN_PROMPTS[domain];
+    if (!systemPromptFn) return res.status(400).json({ error: `Unknown domain: ${domain}` });
+
+    const systemPrompt = systemPromptFn(economicData);
+
+    const claudeMessages = messages.map((m) => ({
+      role: m.role === "bot" ? "assistant" : "user",
+      content: m.content,
+    }));
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const stream = claude.messages.stream({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2048,
+      system: systemPrompt,
+      messages: claudeMessages,
+    });
+
+    for await (const event of stream) {
+      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+        res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`);
+      }
+    }
+
+    res.write("data: [DONE]\n\n");
+    res.end();
+  } catch (e) {
+    console.error(e);
+    if (!res.headersSent) {
+      res.status(500).json({ error: e?.message || String(e) });
+    } else {
+      res.write(`data: ${JSON.stringify({ error: e?.message })}\n\n`);
+      res.end();
+    }
   }
 });
 
