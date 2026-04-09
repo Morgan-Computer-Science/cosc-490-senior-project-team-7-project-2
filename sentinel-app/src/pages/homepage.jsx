@@ -1,10 +1,23 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./homepage.css";
 
 const Homepage = () => {
+  const navigate = useNavigate();
+  const [command, setCommand] = useState("");
+
+  const goToChatbot = (domain) => {
+    navigate("/chatbot", { state: { domain, initialQuestion: command.trim() } });
+  };
+
+  const handleReviewNow = () => {
+    navigate("/chatbot", { state: { domain: "National Security", initialQuestion: "Generate the full daily presidential briefing." } });
+  };
+
   return (
     <div className="homepage">
       <header className="topRect">
-        <button className="Logout" type="button">
+        <button className="Logout" type="button" onClick={() => navigate("/login")}>
           Logout
         </button>
 
@@ -25,55 +38,60 @@ const Homepage = () => {
         </div>
       </header>
 
-
       <div className="presBrief_container">
         <h1 className="PB_title">Daily President Briefing</h1>
 
         <div className="presBrief_box">
-            <span className="checkMark">✔</span>
-            <span className="boxText">Ready for Review</span>
+          <span className="checkMark">✔</span>
+          <span className="boxText">Ready for Review</span>
         </div>
-        <button className="reviewBreif_button" type="button">Review Now</button>
+        <button className="reviewBreif_button" type="button" onClick={handleReviewNow}>
+          Review Now
+        </button>
       </div>
-
 
       <div className="decision_center">
         <h1 className="DC_title">Decision Center</h1>
 
         <div className="DC_inputSection">
-
           <input
             id="Command"
             className="dc_label"
             placeholder="What would you like SENTINEL to analyze?"
+            value={command}
+            onChange={(e) => setCommand(e.target.value)}
           />
-
         </div>
 
         <div className="buttonContainer">
+          <button className="domesticPolicy_btn" type="button" onClick={() => goToChatbot("Domestic Policy")}>
+            Domestic Policy
+          </button>
 
-          <button className="domesticPolicy_btn" type="button">Domestic Policy</button>
+          <button className="economy_btn" type="button" onClick={() => goToChatbot("Economy")}>
+            Economy
+          </button>
 
-          <button className="economy_btn" type="button">Economy</button>
+          <button className="nationalSecurity_btn" type="button" onClick={() => goToChatbot("National Security")}>
+            National Security
+          </button>
 
-          <button className="nationalSecurity_btn" type="button">National Security</button>
-
-          <button className="internationalRelation_btn" type="button">International Relation</button>
-
-          
+          <button className="internationalRelation_btn" type="button" onClick={() => goToChatbot("International Relations")}>
+            International Relation
+          </button>
         </div>
       </div>
 
       <div className="nationalPriority_alt_Container">
-
         <div className="NPA_topRow">
           <h1 className="NPA_title">National Priority Alert</h1>
           <span className="NPA_badge">HIGH</span>
         </div>
 
-
         <div className="NPA_bottomRow">
-          <button className="NPA_button" type="button">View Brief</button>
+          <button className="NPA_button" type="button" onClick={() => goToChatbot("National Security")}>
+            View Brief
+          </button>
         </div>
       </div>
     </div>

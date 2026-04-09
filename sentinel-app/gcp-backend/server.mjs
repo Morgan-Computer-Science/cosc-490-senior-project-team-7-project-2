@@ -1,10 +1,17 @@
-// gcp-backend/server.mjs
+import "dotenv/config";
 import express from "express";
+import cors from "cors";
+import Anthropic from "@anthropic-ai/sdk";
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
-const SERIES = {
+const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// ── FRED helpers ────────────────────────────────────────────────────────────
+
+const FRED_SERIES = {
   CPI: "CPIAUCSL",
   CORE_CPI: "CPILFESL",
   UNEMPLOYMENT: "UNRATE",
@@ -14,54 +21,10 @@ const SERIES = {
   OIL_PRICE_WTI: "DCOILWTICO",
 };
 
-function hasAny(q, words) {
-  return words.some((w) => q.includes(w));
-}
-
-function pickMetrics(question) {
-  const q = question.toLowerCase();
-  const wanted = new Set();
-
-  const priceWords = ["price", "inflation", "rent", "grocery", "cost of living", "cpi", "utilities"];
-  const laborWords = ["jobs", "unemployment", "labor", "wage", "layoff", "hiring", "payroll"];
-  const energyWords = ["gas", "gasoline", "oil", "energy", "diesel", "refinery", "opec", "barrel"];
-  const transportWords = ["transport", "traffic", "roads", "bridge", "rail", "transit", "port", "shipping", "freight", "supply chain"];
-
-  if (hasAny(q, priceWords)) {
-    wanted.add(SERIES.CPI);
-    wanted.add(SERIES.CORE_CPI);
-  }
-
-  if (hasAny(q, laborWords)) {
-    wanted.add(SERIES.UNEMPLOYMENT);
-    wanted.add(SERIES.PAYROLLS);
-    wanted.add(SERIES.WAGES);
-  }
-
-  if (hasAny(q, energyWords)) {
-    wanted.add(SERIES.GAS_PRICE);
-    wanted.add(SERIES.OIL_PRICE_WTI);
-  }
-
-  if (hasAny(q, transportWords)) {
-    wanted.add(SERIES.GAS_PRICE);
-  }
-
-  if (wanted.size === 0) {
-    wanted.add(SERIES.CPI);
-    wanted.add(SERIES.UNEMPLOYMENT);
-    wanted.add(SERIES.PAYROLLS);
-    wanted.add(SERIES.GAS_PRICE);
-  }
-
-  return [...wanted];
-}
-
 async function fredLatest(seriesId) {
   const fredKey = process.env.FRED_API_KEY;
-
-  if (!fredKey) {
-    return { seriesId, lastValue: null, lastDate: null, source: "FRED", note: "Missing FRED_API_KEY" };
+  if (!fredKey || fredKey === "your_fred_key_here") {
+    return { seriesId, lastValue: null, lastDate: null, note: "FRED_API_KEY not set" };
   }
 
   const url = new URL("https://api.stlouisfed.org/fred/series/observations");
@@ -72,129 +35,160 @@ async function fredLatest(seriesId) {
   url.searchParams.set("limit", "1");
 
   const res = await fetch(url.toString());
-  if (!res.ok) {
-    const text = await res.text();
-    return { seriesId, lastValue: null, lastDate: null, source: "FRED", note: `FRED error ${res.status}: ${text}` };
-  }
+  if (!res.ok) return { seriesId, lastValue: null, lastDate: null, note: `FRED error ${res.status}` };
 
   const data = await res.json();
   const obs = data.observations?.[0];
-  if (!obs) return { seriesId, lastValue: null, lastDate: null, source: "FRED", note: "No observations" };
+  if (!obs) return { seriesId, lastValue: null, lastDate: null, note: "No data" };
 
   const value = Number(obs.value);
   return {
     seriesId,
     lastValue: Number.isFinite(value) ? value : null,
     lastDate: obs.date ?? null,
-    source: "FRED",
   };
 }
 
-async function openaiChat({ system, user }) {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) throw new Error("Missing OPENAI_API_KEY");
-
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4.1-mini",
-      temperature: 0.2,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`OpenAI error ${res.status}: ${text}`);
-  }
-
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? "";
+async function fetchEconomicData() {
+  const results = await Promise.all(Object.values(FRED_SERIES).map(fredLatest));
+  return results;
 }
 
-async function runAgents(question) {
-  const q = question.toLowerCase();
+// ── Domain system prompts ────────────────────────────────────────────────────
 
-  const wantsPrices = hasAny(q, ["price", "inflation", "rent", "grocery", "cost of living", "cpi", "utilities"]);
-  const wantsJobs = hasAny(q, ["jobs", "unemployment", "labor", "wage", "layoff", "hiring", "payroll"]);
-  const wantsEnergy = hasAny(q, ["gas", "gasoline", "oil", "energy", "diesel", "refinery", "opec", "barrel"]);
-  const wantsTransport = hasAny(q, ["transport", "traffic", "roads", "bridge", "rail", "transit", "port", "shipping", "freight", "supply chain"]);
+const DOMAIN_PROMPTS = {
+  Economy: (data) => `You are SENTINEL's Economy Intelligence Agent, briefing the President of the United States.
+Your role: analyze economic conditions and provide a clear, actionable presidential briefing.
 
-  const runDefault = !wantsPrices && !wantsJobs && !wantsEnergy && !wantsTransport;
+${data ? `LIVE ECONOMIC DATA (FRED):\n${JSON.stringify(data, null, 2)}\n` : ""}
+Format your response as a structured briefing with:
+- **Situation Summary** (2-3 sentences)
+- **Key Indicators** (bullet points with data if available)
+- **What This Means** (impact for Americans)
+- **Policy Options** (2-3 concrete options for the President)
+- **Watch Next** (what to monitor)
 
-  const evidence = [];
-  for (const id of pickMetrics(question)) evidence.push(await fredLatest(id));
+Be direct, factual, and concise. Classify as TOP SECRET.`,
 
-  const payload = JSON.stringify({ question, evidence }, null, 2);
+  "National Security": () => `You are SENTINEL's National Security Intelligence Agent, briefing the President of the United States.
+Your role: synthesize national security threats, defense readiness, and cybersecurity posture.
 
-  const drafts = {};
+Format your response as a structured briefing with:
+- **Threat Assessment** (current threat level and summary)
+- **Active Concerns** (bullet points on top threats)
+- **Defense Posture** (current readiness status)
+- **Recommended Actions** (2-3 immediate actions for consideration)
+- **Intelligence Gaps** (what remains unknown)
 
-  if (wantsPrices || runDefault) {
-    drafts.prices_cost_of_living = await openaiChat({
-      system:
-        "You are the Prices and Cost of Living Agent for a presidential briefing. Use only the evidence provided. If unsupported, say you cannot verify. Output 4 to 7 bullets.",
-      user: payload,
-    });
-  }
+Be direct and factual. Classify as TOP SECRET / SCI.`,
 
-  if (wantsJobs || runDefault) {
-    drafts.jobs_and_labor = await openaiChat({
-      system:
-        "You are the Jobs and Labor Agent for a presidential briefing. Use only the evidence provided. If unsupported, say you cannot verify. Output 4 to 7 bullets.",
-      user: payload,
-    });
-  }
+  "Domestic Policy": () => `You are SENTINEL's Domestic Policy Intelligence Agent, briefing the President of the United States.
+Your role: assess the domestic political landscape, public priorities, and policy opportunities.
 
-  if (wantsEnergy) {
-    drafts.energy_and_oil = await openaiChat({
-      system:
-        "You are the Energy and Oil Agent for a presidential briefing. Use only the evidence provided. If unsupported, say you cannot verify. Output 4 to 7 bullets.",
-      user: payload,
-    });
-  }
+Format your response as a structured briefing with:
+- **Domestic Landscape** (current state of major domestic issues)
+- **Priority Issues** (top 3-4 issues requiring presidential attention)
+- **Public Sentiment** (key trends in public opinion)
+- **Legislative Opportunities** (what can move forward)
+- **Risk Areas** (potential flashpoints)
 
-  if (wantsTransport) {
-    drafts.transportation_and_infrastructure = await openaiChat({
-      system:
-        "You are the Transportation and Infrastructure Agent for a presidential briefing. Use only the evidence provided. If unsupported, say you cannot verify. Output 4 to 7 bullets.",
-      user: payload,
-    });
-  }
+Be direct and strategic. Classify as CONFIDENTIAL.`,
 
-  const options = await openaiChat({
-    system:
-      "You are the Policy Options Agent. Provide 2 to 4 realistic options for the President. For each: action, upside, downside, timeline, risks. Do not invent statistics. Numbers must appear in evidence.",
-    user: payload,
+  "International Relations": () => `You are SENTINEL's International Relations Intelligence Agent, briefing the President of the United States.
+Your role: assess the global diplomatic landscape, alliances, and geopolitical risks.
+
+Format your response as a structured briefing with:
+- **Global Situation** (overview of key international dynamics)
+- **Priority Relationships** (allies and adversaries requiring attention)
+- **Active Flashpoints** (ongoing tensions or crises)
+- **Diplomatic Opportunities** (openings to advance US interests)
+- **Strategic Risks** (threats to US global position)
+
+Be direct and strategic. Classify as TOP SECRET.`,
+};
+
+// ── Claude helper ────────────────────────────────────────────────────────────
+
+async function callClaude(systemPrompt, userMessage) {
+  const response = await claude.messages.create({
+    model: "claude-opus-4-6",
+    max_tokens: 2048,
+    thinking: { type: "adaptive" },
+    system: systemPrompt,
+    messages: [{ role: "user", content: userMessage }],
   });
 
-  const factCheck = await openaiChat({
-    system: "You are the Fact Check Agent. Compare drafts and options to evidence. Return JSON only with keys supported, unsupported, fixes.",
-    user: JSON.stringify({ drafts, options, evidence }, null, 2),
-  });
-
-  return { evidence, drafts, options, factCheck };
+  return response.content.find((b) => b.type === "text")?.text ?? "";
 }
 
-app.post("/economy/brief", async (req, res) => {
+// ── Routes ───────────────────────────────────────────────────────────────────
+
+// Generate a domain briefing
+app.post("/api/brief", async (req, res) => {
   try {
-    const question = String(req.body?.question || "").trim();
-    if (!question) return res.status(400).json({ error: "question is required" });
+    const { domain, question } = req.body;
+    if (!domain) return res.status(400).json({ error: "domain is required" });
 
-    const result = await runAgents(question);
-    res.json({ question, ...result });
+    let economicData = null;
+    if (domain === "Economy") {
+      economicData = await fetchEconomicData();
+    }
+
+    const systemPromptFn = DOMAIN_PROMPTS[domain];
+    if (!systemPromptFn) return res.status(400).json({ error: `Unknown domain: ${domain}` });
+
+    const systemPrompt = systemPromptFn(economicData);
+    const userMessage = question?.trim()
+      ? `Question from the President: ${question}`
+      : `Generate the daily ${domain} briefing for the President.`;
+
+    const briefing = await callClaude(systemPrompt, userMessage);
+    res.json({ domain, briefing, economicData });
   } catch (e) {
+    console.error(e);
     res.status(500).json({ error: e?.message || String(e) });
   }
 });
 
-app.get("/health", (req, res) => res.status(200).send("ok"));
+// Conversational chat within a domain
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { domain, messages } = req.body;
+    if (!domain) return res.status(400).json({ error: "domain is required" });
+    if (!messages?.length) return res.status(400).json({ error: "messages is required" });
+
+    let economicData = null;
+    if (domain === "Economy") {
+      economicData = await fetchEconomicData();
+    }
+
+    const systemPromptFn = DOMAIN_PROMPTS[domain];
+    if (!systemPromptFn) return res.status(400).json({ error: `Unknown domain: ${domain}` });
+
+    const systemPrompt = systemPromptFn(economicData);
+
+    const claudeMessages = messages.map((m) => ({
+      role: m.role === "bot" ? "assistant" : "user",
+      content: m.content,
+    }));
+
+    const response = await claude.messages.create({
+      model: "claude-opus-4-6",
+      max_tokens: 2048,
+      thinking: { type: "adaptive" },
+      system: systemPrompt,
+      messages: claudeMessages,
+    });
+
+    const reply = response.content.find((b) => b.type === "text")?.text ?? "";
+    res.json({ reply });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e?.message || String(e) });
+  }
+});
+
+app.get("/health", (_req, res) => res.status(200).send("ok"));
 
 const port = process.env.PORT || 8080;
-app.listen(port, () => console.log(`Listening on ${port}`));
+app.listen(port, () => console.log(`SENTINEL backend listening on port ${port}`));
