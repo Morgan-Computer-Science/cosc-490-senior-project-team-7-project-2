@@ -18,3 +18,15 @@ def get_health_intel():
 
 def get_energy_intel():
     return safe_fetch("https://www.eia.gov/todayinenergy/")
+
+
+def get_military_intel():
+    return safe_fetch("https://www.defense.gov/News/Releases/")
+
+
+def get_jobs_intel():
+    return safe_fetch("https://www.bls.gov/news.release/empsit.nr0.htm")
+
+
+def get_trade_intel():
+    return safe_fetch("https://www.census.gov/foreign-trade/Press-Release/current_press_release/index.html")

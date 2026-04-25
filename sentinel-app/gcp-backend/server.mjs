@@ -113,15 +113,50 @@ Format your response as a structured briefing with:
 - **Strategic Risks** (threats to US global position)
 
 Be direct and strategic. Classify as TOP SECRET.`,
+
+  "Military & Defense": () => `You are SENTINEL's Military & Defense Intelligence Agent, briefing the President of the United States.
+Your role: assess U.S. military readiness, active operations, and global defense posture.
+
+Format your response as a structured briefing with:
+- **Force Readiness** (current status of U.S. military branches)
+- **Active Operations** (ongoing deployments and missions)
+- **Adversary Activity** (notable movements by China, Russia, or other actors)
+- **Defense Priorities** (top procurement and capability gaps)
+- **Recommended Actions** (2-3 options for the Commander in Chief)
+
+Be direct and factual. Classify as TOP SECRET / SCI.`,
+
+  "Jobs & Employment": () => `You are SENTINEL's Labor & Employment Intelligence Agent, briefing the President of the United States.
+Your role: analyze U.S. labor market conditions and provide actionable policy guidance.
+
+Format your response as a structured briefing with:
+- **Labor Market Overview** (current employment landscape)
+- **Key Indicators** (unemployment rate, job gains/losses, wage trends)
+- **Sector Spotlight** (industries gaining or shedding jobs)
+- **Vulnerable Populations** (groups facing the most pressure)
+- **Policy Options** (2-3 concrete actions to support American workers)
+
+Be direct and factual. Classify as CONFIDENTIAL.`,
+
+  "Trade & Commerce": () => `You are SENTINEL's Trade & Commerce Intelligence Agent, briefing the President of the United States.
+Your role: assess U.S. trade conditions, supply chain risks, and commercial competitiveness.
+
+Format your response as a structured briefing with:
+- **Trade Balance** (current deficit/surplus and trend)
+- **Key Partners** (top trading relationships and tensions)
+- **Tariff & Sanctions Impact** (effects on U.S. industries and consumers)
+- **Supply Chain Risks** (critical dependencies and vulnerabilities)
+- **Policy Options** (2-3 trade or commerce actions for consideration)
+
+Be direct and factual. Classify as CONFIDENTIAL.`,
 };
 
 // ── Claude helper ────────────────────────────────────────────────────────────
 
 async function callClaude(systemPrompt, userMessage) {
   const response = await claude.messages.create({
-    model: "claude-opus-4-6",
+    model: "claude-sonnet-4-6",
     max_tokens: 2048,
-    thinking: { type: "adaptive" },
     system: systemPrompt,
     messages: [{ role: "user", content: userMessage }],
   });
@@ -181,9 +216,8 @@ app.post("/api/chat", async (req, res) => {
     }));
 
     const response = await claude.messages.create({
-      model: "claude-opus-4-6",
+      model: "claude-sonnet-4-6",
       max_tokens: 2048,
-      thinking: { type: "adaptive" },
       system: systemPrompt,
       messages: claudeMessages,
     });
@@ -245,6 +279,113 @@ app.post("/api/chat/stream", async (req, res) => {
       res.write(`data: ${JSON.stringify({ error: e?.message })}\n\n`);
       res.end();
     }
+  }
+});
+
+// Presidential Daily Brief — all 7 agents stream simultaneously, then cross-domain synthesis
+app.get("/api/pdb/stream", async (req, res) => {
+  try {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const domains = Object.keys(DOMAIN_PROMPTS);
+    const allBriefings = {};
+
+    // Process in batches of 2 to stay within concurrent connection limits
+    const BATCH_SIZE = 2;
+    for (let i = 0; i < domains.length; i += BATCH_SIZE) {
+      const batch = domains.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (domain) => {
+          let economicData = null;
+          if (domain === "Economy") economicData = await fetchEconomicData();
+          const systemPrompt = DOMAIN_PROMPTS[domain](economicData);
+
+          const stream = claude.messages.stream({
+            model: "claude-sonnet-4-6",
+            max_tokens: 600,
+            system: systemPrompt,
+            messages: [{ role: "user", content: `Generate a concise daily ${domain} presidential briefing. Under 200 words. Use the standard briefing format.` }],
+          });
+
+          let fullText = "";
+          for await (const event of stream) {
+            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+              fullText += event.delta.text;
+              res.write(`data: ${JSON.stringify({ type: "chunk", domain, text: event.delta.text })}\n\n`);
+            }
+          }
+          allBriefings[domain] = fullText;
+          res.write(`data: ${JSON.stringify({ type: "domain_done", domain })}\n\n`);
+        })
+      );
+    }
+
+    // Cross-domain synthesis after all domains complete
+    res.write(`data: ${JSON.stringify({ type: "synthesis_start" })}\n\n`);
+
+    const briefingsSummary = Object.entries(allBriefings)
+      .map(([d, b]) => `=== ${d} ===\n${b}`)
+      .join("\n\n");
+
+    const synthesisStream = claude.messages.stream({
+      model: "claude-sonnet-4-6",
+      max_tokens: 600,
+      system: `You are SENTINEL's Chief Intelligence Analyst. Identify dangerous connections BETWEEN domains that individual advisors miss. Be direct, concise, and alarming where warranted. Classify TOP SECRET.`,
+      messages: [{
+        role: "user",
+        content: `Analyze these briefings and identify cross-domain connections:\n\n${briefingsSummary}\n\nFormat your response as:\n**Cross-Domain Risks**\n- [risks that span multiple domains]\n\n**Compounding Effects**\n- [how one domain worsens another]\n\n**Top Priority Action**\n[single most critical recommendation for the President]\n\nUnder 200 words.`,
+      }],
+    });
+
+    for await (const event of synthesisStream) {
+      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+        res.write(`data: ${JSON.stringify({ type: "chunk", domain: "Cross-Domain Analysis", text: event.delta.text })}\n\n`);
+      }
+    }
+
+    res.write("data: [DONE]\n\n");
+    res.end();
+  } catch (e) {
+    console.error(e);
+    if (!res.headersSent) res.status(500).json({ error: e?.message || String(e) });
+    else { res.write(`data: ${JSON.stringify({ error: e?.message })}\n\n`); res.end(); }
+  }
+});
+
+// Quick threat level for every domain — powers the homepage dashboard
+app.get("/api/threat", async (req, res) => {
+  try {
+    const domains = Object.keys(DOMAIN_PROMPTS);
+    const results = [];
+
+    // Process in batches of 3 to avoid concurrent connection limits
+    const BATCH_SIZE = 3;
+    for (let i = 0; i < domains.length; i += BATCH_SIZE) {
+      const batch = domains.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map(async (domain) => {
+          try {
+            const text = await callClaude(
+              "You are a rapid threat assessment system. Respond ONLY with a valid JSON object and nothing else — no markdown, no explanation.",
+              `Assess the current U.S. threat level for the domain: "${domain}". Return exactly: {"level":"ELEVATED","reason":"one short sentence"} where level is one of: LOW, ELEVATED, HIGH, CRITICAL.`
+            );
+            const match = text.match(/\{[^}]+\}/s);
+            const json = JSON.parse(match?.[0] ?? text.trim());
+            return { domain, level: json.level ?? "ELEVATED", reason: json.reason ?? "" };
+          } catch {
+            return { domain, level: "ELEVATED", reason: "Assessment pending" };
+          }
+        })
+      );
+      results.push(...batchResults);
+    }
+
+    res.json(results);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e?.message || String(e) });
   }
 });
 

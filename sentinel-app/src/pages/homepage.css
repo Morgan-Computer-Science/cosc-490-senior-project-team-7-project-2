@@ -518,3 +518,59 @@
 }
 
 .reviewBreif_button:active { transform: translateY(0); }
+
+/* ════════════════════════════════════════
+   THREAT BADGES on domain buttons
+   ════════════════════════════════════════ */
+.buttonContainer button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.btn-label {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.threat-pill {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.threat--low {
+  color: rgba(0, 255, 120, 0.95);
+  background: rgba(0, 255, 120, 0.08);
+  border: 1px solid rgba(0, 255, 120, 0.30);
+}
+
+.threat--elevated {
+  color: rgba(255, 215, 0, 0.95);
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.30);
+}
+
+.threat--high {
+  color: rgba(255, 140, 0, 0.95);
+  background: rgba(255, 140, 0, 0.08);
+  border: 1px solid rgba(255, 140, 0, 0.35);
+}
+
+.threat--critical {
+  color: rgba(255, 60, 60, 0.95);
+  background: rgba(255, 60, 60, 0.12);
+  border: 1px solid rgba(255, 60, 60, 0.40);
+}
+
+.threat--loading {
+  color: rgba(180, 180, 180, 0.40);
+  border: 1px solid rgba(180, 180, 180, 0.15);
+}

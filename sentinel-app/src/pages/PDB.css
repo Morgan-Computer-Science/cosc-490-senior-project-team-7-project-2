@@ -1,0 +1,274 @@
+/* ── Page shell ── */
+.pdb-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #011571 0%, #000000 100%);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "Roboto", Arial, sans-serif;
+}
+
+/* ── Header ── */
+.pdb-header {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  height: 90px;
+  background: rgb(5, 0, 29);
+  border-bottom: 1px solid rgba(255, 60, 60, 0.35);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+}
+
+.pdb-back {
+  justify-self: start;
+  height: 44px;
+  padding: 0 20px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.pdb-back:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.pdb-header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.pdb-classification {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: rgba(255, 60, 60, 0.9);
+  text-transform: uppercase;
+}
+
+.pdb-title {
+  margin: 0;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #caa44a 0%, #fff2b0 40%, #caa44a 70%, #8a5a00 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  white-space: nowrap;
+}
+
+.pdb-date {
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.10em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.pdb-export-btn {
+  justify-self: end;
+  height: 44px;
+  padding: 0 22px;
+  background: linear-gradient(180deg, rgba(65, 130, 255, 0.30), rgba(30, 80, 180, 0.20));
+  color: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(90, 160, 255, 0.40);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.pdb-export-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(110, 185, 255, 0.70);
+  box-shadow: 0 0 18px rgba(70, 130, 255, 0.25);
+}
+.pdb-export-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Agent grid ── */
+.pdb-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 20px;
+}
+
+/* ── Individual agent card ── */
+.pdb-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(10, 18, 50, 0.88);
+  border: 1px solid rgba(120, 170, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.pdb-card--generating {
+  border-color: rgba(255, 200, 60, 0.30);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 18px rgba(255, 200, 60, 0.08);
+  animation: cardPulse 2.5s ease-in-out infinite;
+}
+
+.pdb-card--done {
+  border-color: rgba(0, 255, 120, 0.28);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 14px rgba(0, 255, 120, 0.08);
+  animation: none;
+}
+
+.pdb-card--waiting {
+  border-color: rgba(120, 120, 120, 0.25);
+  opacity: 0.75;
+}
+
+/* Synthesis card spans both columns */
+.pdb-card--synthesis {
+  grid-column: 1 / -1;
+  border-color: rgba(200, 100, 255, 0.28);
+  background: rgba(18, 8, 45, 0.92);
+}
+.pdb-card--synthesis.pdb-card--generating {
+  border-color: rgba(200, 100, 255, 0.45);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 22px rgba(180, 80, 255, 0.12);
+}
+.pdb-card--synthesis.pdb-card--done {
+  border-color: rgba(200, 100, 255, 0.40);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 18px rgba(180, 80, 255, 0.14);
+}
+
+@keyframes cardPulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 6px rgba(255,200,60,0.06); }
+  50%       { box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 22px rgba(255,200,60,0.18); }
+}
+
+/* ── Card header ── */
+.pdb-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.20);
+}
+
+.pdb-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* ── Status badges ── */
+.pdb-status-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 5px;
+}
+
+.badge--gen {
+  color: rgba(255, 210, 60, 0.95);
+  background: rgba(255, 210, 60, 0.10);
+  border: 1px solid rgba(255, 210, 60, 0.30);
+  animation: badgePulse 1.8s ease-in-out infinite;
+}
+
+.badge--done {
+  color: rgba(0, 255, 120, 0.95);
+  background: rgba(0, 255, 120, 0.08);
+  border: 1px solid rgba(0, 255, 120, 0.30);
+}
+
+.badge--wait {
+  color: rgba(180, 180, 180, 0.80);
+  background: rgba(180, 180, 180, 0.06);
+  border: 1px solid rgba(180, 180, 180, 0.20);
+}
+
+@keyframes badgePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* ── Card body ── */
+.pdb-card-body {
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.pdb-card-body p { margin: 0 0 8px 0; }
+.pdb-card-body ul { margin: 4px 0 8px 0; padding-left: 18px; }
+.pdb-card-body li { margin-bottom: 4px; }
+.pdb-card-body strong { color: rgba(255, 255, 255, 0.96); }
+.pdb-card-body h1, .pdb-card-body h2, .pdb-card-body h3 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 8px 0 4px 0;
+  color: rgba(200, 220, 255, 0.95);
+}
+
+/* ── Typing dots ── */
+.pdb-typing {
+  display: flex;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.pdb-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  animation: dotBounce 1.4s ease-in-out infinite;
+}
+.pdb-dot:nth-child(2) { animation-delay: 0.2s; }
+.pdb-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+  40%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ── Wait text ── */
+.pdb-wait-text {
+  color: rgba(180, 180, 180, 0.55);
+  font-style: italic;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* ── Footer ── */
+.pdb-footer {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: rgba(255, 60, 60, 0.70);
+  border-top: 1px solid rgba(255, 60, 60, 0.20);
+  background: rgb(5, 0, 29);
+}

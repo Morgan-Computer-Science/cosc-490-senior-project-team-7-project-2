@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import { jsPDF } from "jspdf";
 import "./Chatbot.css";
 
-const DOMAINS = ["Economy", "National Security", "Domestic Policy", "International Relations"];
+const DOMAINS = ["Economy", "National Security", "Domestic Policy", "International Relations", "Military & Defense", "Jobs & Employment", "Trade & Commerce"];
 
 function getTime() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -147,6 +148,53 @@ export default function Chatbot() {
     initializedRef.current = false;
   };
 
+  const exportPDF = () => {
+    if (!messages.length) return;
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 14;
+    const maxW = pageW - margin * 2;
+    let y = 18;
+
+    const write = (text, size = 10, bold = false, color = [20, 20, 20]) => {
+      doc.setFontSize(size);
+      doc.setFont("helvetica", bold ? "bold" : "normal");
+      doc.setTextColor(...color);
+      doc.splitTextToSize(String(text), maxW).forEach((line) => {
+        if (y > 278) { doc.addPage(); y = 18; }
+        doc.text(line, margin, y);
+        y += size * 0.45;
+      });
+    };
+
+    write("TOP SECRET // SCI // NOFORN", 9, true, [160, 0, 0]);
+    doc.line(margin, y + 1, pageW - margin, y + 1);
+    y += 7;
+    write(`SENTINEL — ${selectedDomain ?? "Intelligence"} Briefing`, 16, true);
+    y += 2;
+    write(new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }), 9, false, [80, 80, 80]);
+    y += 8;
+
+    messages.forEach((msg) => {
+      if (!msg.content) return;
+      if (y > 250) { doc.addPage(); y = 18; }
+      write(msg.role === "bot" ? "SENTINEL" : "PRESIDENT", 9, true, msg.role === "bot" ? [30, 80, 200] : [20, 20, 20]);
+      y += 1;
+      write(msg.content.replace(/\*\*(.+?)\*\*/g, "$1").replace(/#{1,6}\s+/g, "").replace(/\*(.+?)\*/g, "$1"), 9);
+      y += 5;
+    });
+
+    const total = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= total; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(160, 0, 0);
+      doc.text("TOP SECRET // SCI // NOFORN", pageW / 2, 290, { align: "center" });
+    }
+
+    doc.save(`SENTINEL-${(selectedDomain ?? "Brief").replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   const showEmpty = messages.length === 0 && !isTyping;
 
   return (
@@ -162,9 +210,14 @@ export default function Chatbot() {
           {selectedDomain && <span className="domain-badge">{selectedDomain}</span>}
         </div>
         {selectedDomain && (
-          <button className="change-domain-btn" onClick={changeDomain}>
-            Switch Domain
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="change-domain-btn" onClick={exportPDF} disabled={!messages.length}>
+              Export PDF
+            </button>
+            <button className="change-domain-btn" onClick={changeDomain}>
+              Switch Domain
+            </button>
+          </div>
         )}
         {!selectedDomain && <div style={{ width: 120 }} />}
       </header>

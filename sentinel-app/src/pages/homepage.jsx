@@ -1,17 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./homepage.css";
+
+const DOMAIN_BUTTONS = [
+  { label: "Domestic Policy",        domain: "Domestic Policy",        cls: "domesticPolicy_btn" },
+  { label: "Economy",                domain: "Economy",                cls: "economy_btn" },
+  { label: "National Security",      domain: "National Security",      cls: "nationalSecurity_btn" },
+  { label: "International Relations",domain: "International Relations",cls: "internationalRelation_btn" },
+  { label: "Military & Defense",     domain: "Military & Defense",     cls: "domesticPolicy_btn" },
+  { label: "Jobs & Employment",      domain: "Jobs & Employment",      cls: "economy_btn" },
+  { label: "Trade & Commerce",       domain: "Trade & Commerce",       cls: "nationalSecurity_btn" },
+];
+
+const LEVEL_COLOR = {
+  LOW:      "threat--low",
+  ELEVATED: "threat--elevated",
+  HIGH:     "threat--high",
+  CRITICAL: "threat--critical",
+};
 
 const Homepage = () => {
   const navigate = useNavigate();
   const [command, setCommand] = useState("");
+  const [threatLevels, setThreatLevels] = useState({});
+  const [threatLoading, setThreatLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/threat")
+      .then((r) => r.json())
+      .then((data) => {
+        const map = {};
+        data.forEach(({ domain, level, reason }) => { map[domain] = { level, reason }; });
+        setThreatLevels(map);
+      })
+      .catch(() => {})
+      .finally(() => setThreatLoading(false));
+  }, []);
 
   const goToChatbot = (domain) => {
     navigate("/chatbot", { state: { domain, initialQuestion: command.trim() } });
-  };
-
-  const handleReviewNow = () => {
-    navigate("/chatbot", { state: { domain: "National Security", initialQuestion: "Generate the full daily presidential briefing." } });
   };
 
   return (
@@ -73,18 +100,20 @@ const Homepage = () => {
           </div>
 
           <div className="buttonContainer">
-            <button className="domesticPolicy_btn" type="button" onClick={() => goToChatbot("Domestic Policy")}>
-              Domestic Policy
-            </button>
-            <button className="economy_btn" type="button" onClick={() => goToChatbot("Economy")}>
-              Economy
-            </button>
-            <button className="nationalSecurity_btn" type="button" onClick={() => goToChatbot("National Security")}>
-              National Security
-            </button>
-            <button className="internationalRelation_btn" type="button" onClick={() => goToChatbot("International Relations")}>
-              International Relations
-            </button>
+            {DOMAIN_BUTTONS.map(({ label, domain, cls }) => {
+              const threat = threatLevels[domain];
+              return (
+                <button key={domain} className={cls} type="button" onClick={() => goToChatbot(domain)}>
+                  <span className="btn-label">{label}</span>
+                  {!threatLoading && (
+                    <span className={`threat-pill ${threat ? LEVEL_COLOR[threat.level] : "threat--elevated"}`}>
+                      ● {threat ? threat.level : "—"}
+                    </span>
+                  )}
+                  {threatLoading && <span className="threat-pill threat--loading">● —</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -95,8 +124,8 @@ const Homepage = () => {
             <span className="checkMark">✔</span>
             <span className="boxText">Ready for Review</span>
           </div>
-          <button className="reviewBreif_button" type="button" onClick={handleReviewNow}>
-            Review Now
+          <button className="reviewBreif_button" type="button" onClick={() => navigate("/pdb")}>
+            Full Presidential Brief
           </button>
         </div>
 
