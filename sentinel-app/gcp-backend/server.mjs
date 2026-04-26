@@ -1,4 +1,22 @@
-import "dotenv/config";
+import { readFileSync } from "fs";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Load .env — always override so Windows system env vars don't block file values
+for (const p of [resolve(__dirname, "../.env"), resolve(__dirname, ".env")]) {
+  try {
+    const lines = readFileSync(p, "utf8").split(/\r?\n/);
+    let loaded = 0;
+    for (const line of lines) {
+      const m = line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+      if (m) { process.env[m[1]] = m[2].trim(); loaded++; }
+    }
+    console.log(`[env] Loaded ${loaded} vars from ${p}`);
+  } catch { /* file not found */ }
+}
+
 import express from "express";
 import cors from "cors";
 import Anthropic from "@anthropic-ai/sdk";
@@ -9,7 +27,7 @@ app.use(express.json());
 
 const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// ── FRED helpers ────────────────────────────────────────────────────────────
+// ── FRED helpers ─────────────────────────────────────────────────────────────
 
 const FRED_SERIES = {
   CPI: "CPIAUCSL",
@@ -22,8 +40,9 @@ const FRED_SERIES = {
 };
 
 async function fredLatest(seriesId) {
-  const fredKey = process.env.FRED_API_KEY?.trim();
-  if (!fredKey || fredKey === "your_fred_key_here") return null;
+  // Strip ALL non-alphanumeric chars (handles \r, BOM, invisible Unicode, etc.)
+  const fredKey = (process.env.FRED_API_KEY ?? "").replace(/[^a-z0-9]/g, "");
+  if (!fredKey || fredKey.length !== 32) return null;
 
   const url = new URL("https://api.stlouisfed.org/fred/series/observations");
   url.searchParams.set("api_key", fredKey);
@@ -54,198 +73,386 @@ async function fredLatest(seriesId) {
 
 async function fetchEconomicData() {
   const entries = Object.entries(FRED_SERIES);
-  const results = await Promise.all(entries.map(([name, id]) =>
-    fredLatest(id).then((r) => r ? { name, ...r } : null)
-  ));
-  // Only return valid results; if none, return null so the prompt skips live data
+  const results = await Promise.all(
+    entries.map(([name, id]) => fredLatest(id).then((r) => (r ? { name, ...r } : null)))
+  );
   const valid = results.filter(Boolean);
   return valid.length > 0 ? valid : null;
 }
 
-// ── Domain system prompts ────────────────────────────────────────────────────
+// ── News helpers (Guardian API — free, no key required) ───────────────────────
+
+const DOMAIN_NEWS_QUERIES = {
+  "Economy":                    "US economy inflation federal reserve GDP",
+  "National Security":          "US national security terrorism intelligence CIA",
+  "Domestic Policy":            "US domestic policy congress legislation White House",
+  "International Relations":    "US foreign policy diplomacy alliances United Nations",
+  "Military & Defense":         "US military pentagon defense readiness operations",
+  "Jobs & Employment":          "US employment jobs labor market wages workforce",
+  "Trade & Commerce":           "US trade tariffs exports imports supply chain",
+  "Energy & Environment":       "US energy climate environment oil renewables EPA",
+  "Healthcare & Public Health": "US healthcare public health pandemic CDC FDA",
+  "Technology & Cybersecurity": "US technology cybersecurity AI artificial intelligence cyber attack",
+};
+
+async function fetchDomainNews(domain) {
+  const query = DOMAIN_NEWS_QUERIES[domain];
+  if (!query) return [];
+  try {
+    const url = `https://content.guardianapis.com/search?q=${encodeURIComponent(query)}&show-fields=headline&page-size=5&order-by=newest&api-key=test`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.response?.results ?? []).map((a) => ({
+      title: a.webTitle,
+      date: a.webPublicationDate?.slice(0, 10) ?? "",
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function buildSystemPrompt(systemPromptText, news) {
+  if (!news?.length) return systemPromptText;
+  const headlines = news.map((n) => `• ${n.title} (${n.date})`).join("\n");
+  return `${systemPromptText}\n\nLIVE NEWS HEADLINES (${new Date().toLocaleDateString()}):\n${headlines}`;
+}
+
+// ── Domain system prompts ─────────────────────────────────────────────────────
 
 const DOMAIN_PROMPTS = {
   Economy: (data) => `You are SENTINEL's Economy Intelligence Agent, briefing the President of the United States.
-Your role: analyze economic conditions and provide a clear, actionable presidential briefing.
+Be concise. No preamble, no sign-off. Use exactly these markdown sections with ## headers:
 
-${data ? `LIVE ECONOMIC DATA (FRED — as of latest available):\n${data.map(d => `  ${d.name}: ${d.lastValue} (${d.lastDate})`).join("\n")}\n` : ""}
-Format your response as a structured briefing with:
-- **Situation Summary** (2-3 sentences)
-- **Key Indicators** (bullet points with data if available)
-- **What This Means** (impact for Americans)
-- **Policy Options** (2-3 concrete options for the President)
-- **Watch Next** (what to monitor)
+## Bottom Line Up Front
+One sentence: the single most important economic fact right now.
 
-Be direct, factual, and concise. Classify as TOP SECRET.`,
+## Key Indicators
+${data ? `LIVE DATA:\n${data.map((d) => `  ${d.name}: ${d.lastValue} (${d.lastDate})`).join("\n")}\n` : ""}Up to 5 bullet points with values and one-word status (↑ ↓ →).
+
+## What This Means for Americans
+3 bullet points max. Plain language, no jargon.
+
+## Policy Options
+Exactly 3 options. Each: bold title + 1 sentence description.
+
+## Watch Next
+3 bullet points only — upcoming data or events that could change the picture.`,
 
   "National Security": () => `You are SENTINEL's National Security Intelligence Agent, briefing the President of the United States.
-Your role: synthesize national security threats, defense readiness, and cybersecurity posture.
+Be concise. No preamble, no sign-off. Use exactly these markdown sections with ## headers:
 
-Format your response as a structured briefing with:
-- **Threat Assessment** (current threat level and summary)
-- **Active Concerns** (bullet points on top threats)
-- **Defense Posture** (current readiness status)
-- **Recommended Actions** (2-3 immediate actions for consideration)
-- **Intelligence Gaps** (what remains unknown)
+## Bottom Line Up Front
+One sentence: the most urgent national security concern right now.
 
-Be direct and factual. Classify as TOP SECRET / SCI.`,
+## Active Threats
+3 bullet points max — current, specific, prioritized.
+
+## Defense Posture
+2-3 sentences on readiness status and any gaps.
+
+## Recommended Actions
+Exactly 3 options. Each: bold title + 1 sentence.
+
+## Intelligence Gaps
+2 bullet points — what we don't know that matters.`,
 
   "Domestic Policy": () => `You are SENTINEL's Domestic Policy Intelligence Agent, briefing the President of the United States.
-Your role: assess the domestic political landscape, public priorities, and policy opportunities.
+Be concise. No preamble, no sign-off. Use exactly these markdown sections with ## headers:
 
-Format your response as a structured briefing with:
-- **Domestic Landscape** (current state of major domestic issues)
-- **Priority Issues** (top 3-4 issues requiring presidential attention)
-- **Public Sentiment** (key trends in public opinion)
-- **Legislative Opportunities** (what can move forward)
-- **Risk Areas** (potential flashpoints)
+## Bottom Line Up Front
+One sentence: the most pressing domestic issue requiring presidential attention today.
 
-Be direct and strategic. Classify as CONFIDENTIAL.`,
+## Priority Issues
+Top 3 issues only — one bullet each with brief context.
+
+## Public Sentiment
+2-3 sentences on relevant polling trends or public mood.
+
+## Legislative Opportunities
+2 bullet points — what can realistically move in Congress now.
+
+## Risk Areas
+2 bullet points — potential flashpoints to watch.`,
 
   "International Relations": () => `You are SENTINEL's International Relations Intelligence Agent, briefing the President of the United States.
-Your role: assess the global diplomatic landscape, alliances, and geopolitical risks.
+Be concise. No preamble, no sign-off. Use exactly these markdown sections with ## headers:
 
-Format your response as a structured briefing with:
-- **Global Situation** (overview of key international dynamics)
-- **Priority Relationships** (allies and adversaries requiring attention)
-- **Active Flashpoints** (ongoing tensions or crises)
-- **Diplomatic Opportunities** (openings to advance US interests)
-- **Strategic Risks** (threats to US global position)
+## Bottom Line Up Front
+One sentence: the most significant international development requiring attention today.
 
-Be direct and strategic. Classify as TOP SECRET.`,
+## Active Flashpoints
+3 bullet points max — ongoing tensions or crises, prioritized by urgency.
+
+## Alliance Status
+2-3 sentences on key ally relationships and any friction points.
+
+## Diplomatic Opportunities
+2 bullet points — openings to advance US interests.
+
+## Strategic Risks
+2 bullet points — threats to US global standing or security.`,
 
   "Military & Defense": () => `You are SENTINEL's Military & Defense Intelligence Agent, briefing the President of the United States.
-Your role: assess U.S. military readiness, active operations, and global defense posture.
+Be concise. No preamble, no sign-off. Use exactly these markdown sections with ## headers:
 
-Format your response as a structured briefing with:
-- **Force Readiness** (current status of U.S. military branches)
-- **Active Operations** (ongoing deployments and missions)
-- **Adversary Activity** (notable movements by China, Russia, or other actors)
-- **Defense Priorities** (top procurement and capability gaps)
-- **Recommended Actions** (2-3 options for the Commander in Chief)
+## Bottom Line Up Front
+One sentence: the most critical military or defense concern today.
 
-Be direct and factual. Classify as TOP SECRET / SCI.`,
+## Force Readiness
+2-3 sentences — overall status, any degraded capabilities.
+
+## Active Operations
+3 bullet points max — current deployments or engagements worth noting.
+
+## Capability Gaps
+2 bullet points — areas of concern in the defense posture.
+
+## Recommended Actions
+Exactly 3 options. Each: bold title + 1 sentence.`,
 
   "Jobs & Employment": () => `You are SENTINEL's Labor & Employment Intelligence Agent, briefing the President of the United States.
-Your role: analyze U.S. labor market conditions and provide actionable policy guidance.
+Be concise. No preamble, no sign-off. Use exactly these markdown sections with ## headers:
 
-Format your response as a structured briefing with:
-- **Labor Market Overview** (current employment landscape)
-- **Key Indicators** (unemployment rate, job gains/losses, wage trends)
-- **Sector Spotlight** (industries gaining or shedding jobs)
-- **Vulnerable Populations** (groups facing the most pressure)
-- **Policy Options** (2-3 concrete actions to support American workers)
+## Bottom Line Up Front
+One sentence: the most important labor market signal right now.
 
-Be direct and factual. Classify as CONFIDENTIAL.`,
+## Labor Market Snapshot
+3 bullet points — key metrics with values where available (unemployment, payrolls, wages).
+
+## Trend to Watch
+2-3 sentences on the most significant emerging shift (sector, demographic, automation).
+
+## Vulnerable Groups
+2 bullet points — populations facing the greatest employment challenges.
+
+## Policy Options
+Exactly 3 options. Each: bold title + 1 sentence.`,
 
   "Trade & Commerce": () => `You are SENTINEL's Trade & Commerce Intelligence Agent, briefing the President of the United States.
-Your role: assess U.S. trade conditions, supply chain risks, and commercial competitiveness.
+Focus strictly on trade flows, tariffs, import/export policy, WTO, and supply chains — not broader diplomacy.
+Be concise. No preamble, no sign-off. Use exactly these markdown sections with ## headers:
 
-Format your response as a structured briefing with:
-- **Trade Balance** (current deficit/surplus and trend)
-- **Key Partners** (top trading relationships and tensions)
-- **Tariff & Sanctions Impact** (effects on U.S. industries and consumers)
-- **Supply Chain Risks** (critical dependencies and vulnerabilities)
-- **Policy Options** (2-3 trade or commerce actions for consideration)
+## Bottom Line Up Front
+One sentence: the most important trade or supply chain development right now.
 
-Be direct and factual. Classify as CONFIDENTIAL.`,
+## Trade Position
+2-3 sentences — current deficit/surplus trend, top trading partners, key imbalances.
+
+## Active Disputes & Negotiations
+3 bullet points max — ongoing tariff disputes, trade deals, or WTO cases.
+
+## Supply Chain Risks
+2 bullet points — critical vulnerabilities (semiconductors, rare earths, pharmaceuticals, etc.).
+
+## Policy Options
+Exactly 3 options. Each: bold title + 1 sentence.`,
+
+  "Energy & Environment": () => `You are SENTINEL's Energy & Environment Intelligence Agent, briefing the President of the United States.
+Focus on energy security, fossil fuel markets, renewable transition, climate commitments, and EPA regulatory posture.
+Be concise. No preamble, no sign-off. Use exactly these markdown sections with ## headers:
+
+## Bottom Line Up Front
+One sentence: the most pressing energy or environmental issue requiring presidential attention today.
+
+## Energy Security Status
+2-3 sentences — domestic production, strategic reserves, grid vulnerability, fuel price trends.
+
+## Climate & Regulatory Landscape
+2 bullet points — major climate commitments or EPA actions in play.
+
+## Emerging Risks
+2 bullet points — energy supply shocks, extreme weather events, or infrastructure threats.
+
+## Policy Options
+Exactly 3 options. Each: bold title + 1 sentence.`,
+
+  "Healthcare & Public Health": () => `You are SENTINEL's Healthcare & Public Health Intelligence Agent, briefing the President of the United States.
+Focus on healthcare affordability, pandemic preparedness, FDA/CDC actions, public health emergencies, and drug pricing.
+Be concise. No preamble, no sign-off. Use exactly these markdown sections with ## headers:
+
+## Bottom Line Up Front
+One sentence: the most urgent public health or healthcare policy issue right now.
+
+## System Status
+2-3 sentences — overall US healthcare system stress, insurance coverage gaps, hospital capacity.
+
+## Active Health Threats
+3 bullet points max — disease outbreaks, drug shortages, or emerging public health risks.
+
+## Policy Priorities
+2 bullet points — legislation or executive actions with near-term impact on Americans' health.
+
+## Policy Options
+Exactly 3 options. Each: bold title + 1 sentence.`,
+
+  "Technology & Cybersecurity": () => `You are SENTINEL's Technology & Cybersecurity Intelligence Agent, briefing the President of the United States.
+Focus on cyber threats to critical infrastructure, AI policy, semiconductor supply chains, big tech regulation, and digital competition with adversaries.
+Be concise. No preamble, no sign-off. Use exactly these markdown sections with ## headers:
+
+## Bottom Line Up Front
+One sentence: the most critical technology or cybersecurity threat facing the US today.
+
+## Cyber Threat Landscape
+3 bullet points max — active threats to infrastructure, government systems, or critical sectors. Name adversaries where known.
+
+## AI & Tech Policy
+2-3 sentences — where US stands on AI regulation, chip export controls, and tech competition with China.
+
+## Vulnerabilities
+2 bullet points — exposed systems or capability gaps that could be exploited.
+
+## Policy Options
+Exactly 3 options. Each: bold title + 1 sentence.`,
 };
 
-// ── Claude helper ────────────────────────────────────────────────────────────
+const DOMAIN_ORDER = [
+  "Economy",
+  "National Security",
+  "Domestic Policy",
+  "International Relations",
+  "Military & Defense",
+  "Jobs & Employment",
+  "Trade & Commerce",
+  "Energy & Environment",
+  "Healthcare & Public Health",
+  "Technology & Cybersecurity",
+];
 
-async function callClaude(systemPrompt, userMessage) {
-  const response = await claude.messages.create({
+// ── Claude stream helper ──────────────────────────────────────────────────────
+
+async function* streamClaude(systemPrompt, userMessage, maxTokens = 2048) {
+  const stream = claude.messages.stream({
     model: "claude-sonnet-4-6",
-    max_tokens: 2048,
+    max_tokens: maxTokens,
     system: systemPrompt,
     messages: [{ role: "user", content: userMessage }],
   });
-
-  return response.content.find((b) => b.type === "text")?.text ?? "";
+  for await (const event of stream) {
+    if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+      yield event.delta.text;
+    }
+  }
 }
 
-// ── Routes ───────────────────────────────────────────────────────────────────
+// ── Routes ────────────────────────────────────────────────────────────────────
 
-// Generate a domain briefing
-app.post("/api/brief", async (req, res) => {
+// Threat level assessment for all domains (homepage dashboard)
+app.get("/api/threat", async (req, res) => {
   try {
-    const { domain, question } = req.body;
-    if (!domain) return res.status(400).json({ error: "domain is required" });
-
-    let economicData = null;
-    if (domain === "Economy") {
-      economicData = await fetchEconomicData();
-    }
-
-    const systemPromptFn = DOMAIN_PROMPTS[domain];
-    if (!systemPromptFn) return res.status(400).json({ error: `Unknown domain: ${domain}` });
-
-    const systemPrompt = systemPromptFn(economicData);
-    const userMessage = question?.trim()
-      ? `Question from the President: ${question}`
-      : `Generate the daily ${domain} briefing for the President.`;
-
-    const briefing = await callClaude(systemPrompt, userMessage);
-    res.json({ domain, briefing, economicData });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e?.message || String(e) });
-  }
-});
-
-// Conversational chat within a domain
-app.post("/api/chat", async (req, res) => {
-  try {
-    const { domain, messages } = req.body;
-    if (!domain) return res.status(400).json({ error: "domain is required" });
-    if (!messages?.length) return res.status(400).json({ error: "messages is required" });
-
-    let economicData = null;
-    if (domain === "Economy") {
-      economicData = await fetchEconomicData();
-    }
-
-    const systemPromptFn = DOMAIN_PROMPTS[domain];
-    if (!systemPromptFn) return res.status(400).json({ error: `Unknown domain: ${domain}` });
-
-    const systemPrompt = systemPromptFn(economicData);
-
-    const claudeMessages = messages.map((m) => ({
-      role: m.role === "bot" ? "assistant" : "user",
-      content: m.content,
-    }));
-
+    const domains = DOMAIN_ORDER.join(", ");
     const response = await claude.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 2048,
-      system: systemPrompt,
-      messages: claudeMessages,
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 1800,
+      messages: [
+        {
+          role: "user",
+          content: `You are SENTINEL's threat assessment system. Rate the current threat level for each US policy domain as LOW, ELEVATED, HIGH, or CRITICAL based on today's real-world conditions. Return ONLY a valid JSON array with no extra text:
+[{"domain": "...", "level": "LOW|ELEVATED|HIGH|CRITICAL", "reason": "one sentence max"}]
+Domains to rate: ${domains}`,
+        },
+      ],
     });
-
-    const reply = response.content.find((b) => b.type === "text")?.text ?? "";
-    res.json({ reply });
+    const text = response.content[0]?.text ?? "[]";
+    const match = text.match(/\[[\s\S]*\]/);
+    const json = JSON.parse(match?.[0] ?? "[]");
+    res.json(json);
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e?.message || String(e) });
+    console.error("Threat endpoint error:", e);
+    res.json([]);
   }
 });
 
-// Streaming conversational chat (text appears word-by-word)
+// FRED data endpoint for charts
+app.get("/api/fred-data", async (req, res) => {
+  try {
+    const entries = Object.entries(FRED_SERIES);
+    const results = await Promise.all(
+      entries.map(([name, id]) => fredLatest(id).then((r) => (r ? { name, ...r } : null)))
+    );
+    res.json(results.filter(Boolean));
+  } catch (e) {
+    res.json([]);
+  }
+});
+
+// Per-domain FRED chart data
+const DOMAIN_FRED = {
+  "Economy": [
+    { key: "CPI",         id: "CPIAUCSL",      label: "CPI",            color: "#f97316" },
+    { key: "Core CPI",    id: "CPILFESL",      label: "Core CPI",       color: "#fb923c" },
+    { key: "Unemploy",    id: "UNRATE",        label: "Unemploy. %",    color: "#ef4444" },
+    { key: "Payrolls",    id: "PAYEMS",        label: "Payrolls (K)",   color: "#60a5fa" },
+    { key: "Wages",       id: "CES0500000003", label: "Wages $/hr",     color: "#4ade80" },
+    { key: "Gas",         id: "GASREGW",       label: "Gas $/gal",      color: "#facc15" },
+    { key: "WTI Oil",     id: "DCOILWTICO",    label: "Oil $/bbl",      color: "#a78bfa" },
+  ],
+  "Jobs & Employment": [
+    { key: "Unemploy",    id: "UNRATE",        label: "Unemploy. %",    color: "#ef4444" },
+    { key: "Labor Part",  id: "CIVPART",       label: "Labor Part. %",  color: "#60a5fa" },
+    { key: "Job Opens",   id: "JTSJOL",        label: "Openings (K)",   color: "#4ade80" },
+    { key: "Wages",       id: "CES0500000003", label: "Wages $/hr",     color: "#facc15" },
+    { key: "Wkly Hours",  id: "AWHAETP",       label: "Avg Wkly Hrs",   color: "#a78bfa" },
+  ],
+  "Trade & Commerce": [
+    { key: "Trade Bal",   id: "BOPGSTB",       label: "Trade Bal $B",   color: "#f97316" },
+    { key: "Exports",     id: "EXPGS",         label: "Exports $B",     color: "#4ade80" },
+    { key: "Imports",     id: "IMPGS",         label: "Imports $B",     color: "#ef4444" },
+  ],
+  "Energy & Environment": [
+    { key: "Gas",         id: "GASREGW",       label: "Gas $/gal",      color: "#facc15" },
+    { key: "WTI Oil",     id: "DCOILWTICO",    label: "Oil $/bbl",      color: "#f97316" },
+    { key: "Natural Gas", id: "MHHNGSP",       label: "Nat Gas $/MMBtu",color: "#60a5fa" },
+  ],
+  "Healthcare & Public Health": [
+    { key: "Medical CPI", id: "CPIMEDSL",      label: "Medical CPI",    color: "#f43f5e" },
+    { key: "Med Services",id: "CPIMEDSV",      label: "Med Services CPI",color: "#fb7185" },
+  ],
+  "Military & Defense": [
+    { key: "Defense $B",  id: "FDEFX",         label: "Defense Spend $B",color: "#60a5fa" },
+  ],
+  "Domestic Policy": [
+    { key: "Fed Debt $B", id: "GFDEBTN",       label: "Fed Debt $B",    color: "#a78bfa" },
+    { key: "Debt % GDP",  id: "GFDEGDQ188S",   label: "Debt % GDP",     color: "#818cf8" },
+  ],
+};
+
+app.get("/api/fred-domain", async (req, res) => {
+  const domain = req.query.domain ?? "";
+  const series = DOMAIN_FRED[domain];
+  if (!series?.length) return res.json([]);
+  try {
+    const results = await Promise.all(
+      series.map(({ key, id, label, color }) =>
+        fredLatest(id).then((r) => (r ? { key, label, color, ...r } : null))
+      )
+    );
+    res.json(results.filter(Boolean));
+  } catch (e) {
+    res.json([]);
+  }
+});
+
+// Streaming conversational chat
 app.post("/api/chat/stream", async (req, res) => {
   try {
-    const { domain, messages } = req.body;
+    const { domain, messages, scenarioMode } = req.body;
     if (!domain) return res.status(400).json({ error: "domain is required" });
     if (!messages?.length) return res.status(400).json({ error: "messages is required" });
 
     let economicData = null;
-    if (domain === "Economy") {
-      economicData = await fetchEconomicData();
-    }
+    if (domain === "Economy") economicData = await fetchEconomicData();
 
     const systemPromptFn = DOMAIN_PROMPTS[domain];
     if (!systemPromptFn) return res.status(400).json({ error: `Unknown domain: ${domain}` });
 
-    const systemPrompt = systemPromptFn(economicData);
+    const basePrompt = systemPromptFn(economicData);
+    const news = await fetchDomainNews(domain);
+    let systemPrompt = buildSystemPrompt(basePrompt, news);
+
+    if (scenarioMode) {
+      systemPrompt = `${systemPrompt}\n\n[SCENARIO SIMULATION MODE ACTIVE] The President is testing a hypothetical scenario. Analyze cascading consequences, second and third-order effects, and concrete response options. Cover military, economic, diplomatic, and domestic angles as relevant.`;
+    }
 
     const claudeMessages = messages.map((m) => ({
       role: m.role === "bot" ? "assistant" : "user",
@@ -258,7 +465,7 @@ app.post("/api/chat/stream", async (req, res) => {
 
     const stream = claude.messages.stream({
       model: "claude-sonnet-4-6",
-      max_tokens: 2048,
+      max_tokens: 1200,
       system: systemPrompt,
       messages: claudeMessages,
     });
@@ -268,83 +475,6 @@ app.post("/api/chat/stream", async (req, res) => {
         res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`);
       }
     }
-
-    res.write("data: [DONE]\n\n");
-    res.end();
-  } catch (e) {
-    console.error(e);
-    if (!res.headersSent) {
-      res.status(500).json({ error: e?.message || String(e) });
-    } else {
-      res.write(`data: ${JSON.stringify({ error: e?.message })}\n\n`);
-      res.end();
-    }
-  }
-});
-
-// Presidential Daily Brief — all 7 agents stream simultaneously, then cross-domain synthesis
-app.get("/api/pdb/stream", async (req, res) => {
-  try {
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-
-    const domains = Object.keys(DOMAIN_PROMPTS);
-    const allBriefings = {};
-
-    // Process in batches of 2 to stay within concurrent connection limits
-    const BATCH_SIZE = 2;
-    for (let i = 0; i < domains.length; i += BATCH_SIZE) {
-      const batch = domains.slice(i, i + BATCH_SIZE);
-      await Promise.all(
-        batch.map(async (domain) => {
-          let economicData = null;
-          if (domain === "Economy") economicData = await fetchEconomicData();
-          const systemPrompt = DOMAIN_PROMPTS[domain](economicData);
-
-          const stream = claude.messages.stream({
-            model: "claude-sonnet-4-6",
-            max_tokens: 600,
-            system: systemPrompt,
-            messages: [{ role: "user", content: `Generate a concise daily ${domain} presidential briefing. Under 200 words. Use the standard briefing format.` }],
-          });
-
-          let fullText = "";
-          for await (const event of stream) {
-            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-              fullText += event.delta.text;
-              res.write(`data: ${JSON.stringify({ type: "chunk", domain, text: event.delta.text })}\n\n`);
-            }
-          }
-          allBriefings[domain] = fullText;
-          res.write(`data: ${JSON.stringify({ type: "domain_done", domain })}\n\n`);
-        })
-      );
-    }
-
-    // Cross-domain synthesis after all domains complete
-    res.write(`data: ${JSON.stringify({ type: "synthesis_start" })}\n\n`);
-
-    const briefingsSummary = Object.entries(allBriefings)
-      .map(([d, b]) => `=== ${d} ===\n${b}`)
-      .join("\n\n");
-
-    const synthesisStream = claude.messages.stream({
-      model: "claude-sonnet-4-6",
-      max_tokens: 600,
-      system: `You are SENTINEL's Chief Intelligence Analyst. Identify dangerous connections BETWEEN domains that individual advisors miss. Be direct, concise, and alarming where warranted. Classify TOP SECRET.`,
-      messages: [{
-        role: "user",
-        content: `Analyze these briefings and identify cross-domain connections:\n\n${briefingsSummary}\n\nFormat your response as:\n**Cross-Domain Risks**\n- [risks that span multiple domains]\n\n**Compounding Effects**\n- [how one domain worsens another]\n\n**Top Priority Action**\n[single most critical recommendation for the President]\n\nUnder 200 words.`,
-      }],
-    });
-
-    for await (const event of synthesisStream) {
-      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-        res.write(`data: ${JSON.stringify({ type: "chunk", domain: "Cross-Domain Analysis", text: event.delta.text })}\n\n`);
-      }
-    }
-
     res.write("data: [DONE]\n\n");
     res.end();
   } catch (e) {
@@ -354,42 +484,73 @@ app.get("/api/pdb/stream", async (req, res) => {
   }
 });
 
-// Quick threat level for every domain — powers the homepage dashboard
-app.get("/api/threat", async (req, res) => {
-  try {
-    const domains = Object.keys(DOMAIN_PROMPTS);
-    const results = [];
+// Full Presidential Daily Brief — streams all domains then synthesis
+app.get("/api/pdb/stream", async (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
 
-    // Process in batches of 3 to avoid concurrent connection limits
-    const BATCH_SIZE = 3;
-    for (let i = 0; i < domains.length; i += BATCH_SIZE) {
-      const batch = domains.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(
-        batch.map(async (domain) => {
-          try {
-            const text = await callClaude(
-              "You are a rapid threat assessment system. Respond ONLY with a valid JSON object and nothing else — no markdown, no explanation.",
-              `Assess the current U.S. threat level for the domain: "${domain}". Return exactly: {"level":"ELEVATED","reason":"one short sentence"} where level is one of: LOW, ELEVATED, HIGH, CRITICAL.`
-            );
-            const match = text.match(/\{[^}]+\}/s);
-            const json = JSON.parse(match?.[0] ?? text.trim());
-            return { domain, level: json.level ?? "ELEVATED", reason: json.reason ?? "" };
-          } catch {
-            return { domain, level: "ELEVATED", reason: "Assessment pending" };
-          }
-        })
-      );
-      results.push(...batchResults);
+  const write = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+  const briefingTexts = {};
+
+  try {
+    for (const domain of DOMAIN_ORDER) {
+      const systemPromptFn = DOMAIN_PROMPTS[domain];
+      if (!systemPromptFn) continue;
+
+      let economicData = null;
+      if (domain === "Economy") economicData = await fetchEconomicData();
+
+      const basePrompt = systemPromptFn(economicData);
+      const news = await fetchDomainNews(domain);
+      const systemPrompt = buildSystemPrompt(basePrompt, news);
+      const userMessage = `Generate the daily ${domain} briefing for the President.`;
+
+      let domainText = "";
+      for await (const chunk of streamClaude(systemPrompt, userMessage, 900)) {
+        domainText += chunk;
+        write({ type: "chunk", domain, text: chunk });
+      }
+      briefingTexts[domain] = domainText;
+      write({ type: "domain_done", domain });
     }
 
-    res.json(results);
+    // Cross-domain synthesis
+    write({ type: "synthesis_start" });
+    const summaries = DOMAIN_ORDER.map(
+      (d) => `=== ${d.toUpperCase()} ===\n${briefingTexts[d]?.slice(0, 600) ?? "No data"}`
+    ).join("\n\n");
+
+    const synthesisPrompt = `You are SENTINEL's strategic synthesis engine. You have received briefings from all domain intelligence agents. Your job is to identify:
+1. The most critical cross-domain threats and interdependencies
+2. The single most important action the President should take today
+3. Emerging situations that could escalate across multiple domains
+
+Be concise, direct, and presidential. Classify as TOP SECRET // SCI // NOFORN.`;
+
+    for await (const chunk of streamClaude(
+      synthesisPrompt,
+      `Domain briefings for synthesis:\n\n${summaries}`,
+      800
+    )) {
+      write({ type: "chunk", domain: "Cross-Domain Analysis", text: chunk });
+    }
+    write({ type: "domain_done", domain: "Cross-Domain Analysis" });
+    res.write("data: [DONE]\n\n");
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e?.message || String(e) });
+    console.error("PDB stream error:", e);
+    write({ type: "error", message: e?.message });
+    res.write("data: [DONE]\n\n");
   }
+  res.end();
 });
 
 app.get("/health", (_req, res) => res.status(200).send("ok"));
 
 const port = process.env.PORT || 8080;
-app.listen(port, () => console.log(`SENTINEL backend listening on port ${port}`));
+app.listen(port, () => {
+  const fredKey = (process.env.FRED_API_KEY ?? "").replace(/[^a-z0-9]/g, "");
+  console.log(`SENTINEL backend listening on port ${port}`);
+  console.log(`FRED key: ${fredKey ? `${fredKey.slice(0,4)}…${fredKey.slice(-4)} (${fredKey.length} chars)` : "NOT SET"}`);
+  console.log(`Claude key: ${process.env.ANTHROPIC_API_KEY ? "set" : "NOT SET"}`);
+});

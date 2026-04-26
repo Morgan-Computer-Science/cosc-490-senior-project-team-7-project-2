@@ -3,13 +3,16 @@ import { useNavigate } from "react-router-dom";
 import "./homepage.css";
 
 const DOMAIN_BUTTONS = [
-  { label: "Domestic Policy",        domain: "Domestic Policy",        cls: "domesticPolicy_btn" },
-  { label: "Economy",                domain: "Economy",                cls: "economy_btn" },
-  { label: "National Security",      domain: "National Security",      cls: "nationalSecurity_btn" },
-  { label: "International Relations",domain: "International Relations",cls: "internationalRelation_btn" },
-  { label: "Military & Defense",     domain: "Military & Defense",     cls: "domesticPolicy_btn" },
-  { label: "Jobs & Employment",      domain: "Jobs & Employment",      cls: "economy_btn" },
-  { label: "Trade & Commerce",       domain: "Trade & Commerce",       cls: "nationalSecurity_btn" },
+  { label: "Economy",                     domain: "Economy",                     cls: "economy_btn" },
+  { label: "National Security",           domain: "National Security",           cls: "nationalSecurity_btn" },
+  { label: "Domestic Policy",             domain: "Domestic Policy",             cls: "domesticPolicy_btn" },
+  { label: "International Relations",     domain: "International Relations",     cls: "internationalRelation_btn" },
+  { label: "Military & Defense",          domain: "Military & Defense",          cls: "nationalSecurity_btn" },
+  { label: "Jobs & Employment",           domain: "Jobs & Employment",           cls: "economy_btn" },
+  { label: "Trade & Commerce",            domain: "Trade & Commerce",            cls: "internationalRelation_btn" },
+  { label: "Energy & Environment",        domain: "Energy & Environment",        cls: "energy_btn" },
+  { label: "Healthcare & Public Health",  domain: "Healthcare & Public Health",  cls: "healthcare_btn" },
+  { label: "Technology & Cybersecurity",  domain: "Technology & Cybersecurity",  cls: "technology_btn" },
 ];
 
 const LEVEL_COLOR = {
@@ -19,6 +22,26 @@ const LEVEL_COLOR = {
   CRITICAL: "threat--critical",
 };
 
+const THREAT_CACHE_KEY = "sentinel_threat_cache";
+const THREAT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const ALL_DOMAINS = DOMAIN_BUTTONS.map((b) => b.domain);
+
+function getCachedThreats() {
+  try {
+    const raw = sessionStorage.getItem(THREAT_CACHE_KEY);
+    if (!raw) return null;
+    const { ts, data } = JSON.parse(raw);
+    if (Date.now() - ts > THREAT_CACHE_TTL) return null;
+    // Invalidate if the cache is missing any current domain
+    if (!ALL_DOMAINS.every((d) => d in data)) return null;
+    return data;
+  } catch { return null; }
+}
+
+function cacheThreats(data) {
+  try { sessionStorage.setItem(THREAT_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {}
+}
+
 const Homepage = () => {
   const navigate = useNavigate();
   const [command, setCommand] = useState("");
@@ -26,14 +49,26 @@ const Homepage = () => {
   const [threatLoading, setThreatLoading] = useState(true);
 
   useEffect(() => {
+    // Use cached threats instantly if available — avoids re-calling Claude on every navigation
+    const cached = getCachedThreats();
+    if (cached) {
+      setThreatLevels(cached);
+      setThreatLoading(false);
+      return;
+    }
+
     fetch("/api/threat")
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => {
+        if (!Array.isArray(data) || data.length === 0) throw new Error("Empty response");
         const map = {};
         data.forEach(({ domain, level, reason }) => { map[domain] = { level, reason }; });
+        cacheThreats(map);
         setThreatLevels(map);
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.warn("Threat fetch failed:", err.message);
+      })
       .finally(() => setThreatLoading(false));
   }, []);
 

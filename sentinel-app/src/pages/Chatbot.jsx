@@ -1,13 +1,41 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import { jsPDF } from "jspdf";
+import BriefingMessage from "../components/BriefingMessage";
+import DomainCharts from "../components/DomainCharts";
 import "./Chatbot.css";
 
-const DOMAINS = ["Economy", "National Security", "Domestic Policy", "International Relations", "Military & Defense", "Jobs & Employment", "Trade & Commerce"];
+const DOMAINS = [
+  "Economy", "National Security", "Domestic Policy",
+  "International Relations", "Military & Defense",
+  "Jobs & Employment", "Trade & Commerce",
+  "Energy & Environment", "Healthcare & Public Health",
+  "Technology & Cybersecurity",
+];
+
+const HISTORY_KEY = "sentinel_briefing_history";
+const MAX_HISTORY = 15;
 
 function getTime() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function saveToHistory(domain, content) {
+  try {
+    const existing = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
+    const entry = {
+      id: Date.now(),
+      domain,
+      timestamp: new Date().toISOString(),
+      preview: content.slice(0, 200),
+      content,
+    };
+    const updated = [entry, ...existing].slice(0, MAX_HISTORY);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+  } catch {}
+}
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]"); } catch { return []; }
 }
 
 export default function Chatbot() {
@@ -17,6 +45,9 @@ export default function Chatbot() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState(null);
+  const [scenarioMode, setScenarioMode] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState([]);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const initializedRef = useRef(false);
@@ -25,7 +56,6 @@ export default function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  // Auto-select domain and send initial question if navigated from homepage
   useEffect(() => {
     if (initializedRef.current) return;
     const { domain, initialQuestion } = location.state || {};
@@ -33,17 +63,16 @@ export default function Chatbot() {
       initializedRef.current = true;
       setSelectedDomain(domain);
       const question = initialQuestion || `Generate the daily ${domain} briefing for the President.`;
-      sendMessageWithDomain(domain, [], question);
+      sendMessageWithDomain(domain, [], question, false);
     }
   }, [location.state]);
 
-  async function sendMessageWithDomain(domain, history, text) {
+  async function sendMessageWithDomain(domain, history, text, scenario) {
     const userMsg = { role: "user", content: text, time: getTime() };
     const newHistory = [...history, userMsg];
     setMessages(newHistory);
     setIsTyping(true);
 
-    // Add an empty bot message we'll stream into
     const botTime = getTime();
     setMessages((prev) => [...prev, { role: "bot", content: "", time: botTime }]);
 
@@ -51,7 +80,7 @@ export default function Chatbot() {
       const res = await fetch("/api/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain, messages: newHistory }),
+        body: JSON.stringify({ domain, messages: newHistory, scenarioMode: scenario }),
       });
 
       if (!res.ok) {
@@ -67,10 +96,9 @@ export default function Chatbot() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
-        buffer = lines.pop(); // keep incomplete line
+        buffer = lines.pop();
 
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
@@ -82,37 +110,29 @@ export default function Chatbot() {
             fullText += chunk;
             setMessages((prev) => {
               const updated = [...prev];
-              updated[updated.length - 1] = {
-                role: "bot",
-                content: fullText,
-                time: botTime,
-              };
+              updated[updated.length - 1] = { role: "bot", content: fullText, time: botTime };
               return updated;
             });
           } catch {}
         }
       }
 
-      // If nothing came through, show an error
+      // Save the first bot briefing (the initial auto-generated one) to history
+      if (newHistory.length === 1 && fullText) {
+        saveToHistory(domain, fullText);
+      }
+
       if (!fullText) {
         setMessages((prev) => {
           const updated = [...prev];
-          updated[updated.length - 1] = {
-            role: "bot",
-            content: "No response received. Please try again.",
-            time: botTime,
-          };
+          updated[updated.length - 1] = { role: "bot", content: "No response received.", time: botTime };
           return updated;
         });
       }
     } catch (e) {
       setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1] = {
-          role: "bot",
-          content: `Error: ${e.message}`,
-          time: botTime,
-        };
+        updated[updated.length - 1] = { role: "bot", content: `Error: ${e.message}`, time: botTime };
         return updated;
       });
     } finally {
@@ -126,14 +146,11 @@ export default function Chatbot() {
     if (!content || isTyping) return;
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
-    sendMessageWithDomain(selectedDomain, messages, content);
+    sendMessageWithDomain(selectedDomain, messages, content, scenarioMode);
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
   const handleInput = (e) => {
@@ -145,87 +162,65 @@ export default function Chatbot() {
   const changeDomain = () => {
     setSelectedDomain(null);
     setMessages([]);
+    setScenarioMode(false);
     initializedRef.current = false;
   };
 
-  const exportPDF = () => {
-    if (!messages.length) return;
-    const doc = new jsPDF();
-    const pageW = doc.internal.pageSize.getWidth();
-    const margin = 14;
-    const maxW = pageW - margin * 2;
-    let y = 18;
+  const openHistory = () => {
+    setHistory(loadHistory());
+    setShowHistory(true);
+  };
 
-    const write = (text, size = 10, bold = false, color = [20, 20, 20]) => {
-      doc.setFontSize(size);
-      doc.setFont("helvetica", bold ? "bold" : "normal");
-      doc.setTextColor(...color);
-      doc.splitTextToSize(String(text), maxW).forEach((line) => {
-        if (y > 278) { doc.addPage(); y = 18; }
-        doc.text(line, margin, y);
-        y += size * 0.45;
-      });
-    };
-
-    write("TOP SECRET // SCI // NOFORN", 9, true, [160, 0, 0]);
-    doc.line(margin, y + 1, pageW - margin, y + 1);
-    y += 7;
-    write(`SENTINEL — ${selectedDomain ?? "Intelligence"} Briefing`, 16, true);
-    y += 2;
-    write(new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }), 9, false, [80, 80, 80]);
-    y += 8;
-
-    messages.forEach((msg) => {
-      if (!msg.content) return;
-      if (y > 250) { doc.addPage(); y = 18; }
-      write(msg.role === "bot" ? "SENTINEL" : "PRESIDENT", 9, true, msg.role === "bot" ? [30, 80, 200] : [20, 20, 20]);
-      y += 1;
-      write(msg.content.replace(/\*\*(.+?)\*\*/g, "$1").replace(/#{1,6}\s+/g, "").replace(/\*(.+?)\*/g, "$1"), 9);
-      y += 5;
-    });
-
-    const total = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= total; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(160, 0, 0);
-      doc.text("TOP SECRET // SCI // NOFORN", pageW / 2, 290, { align: "center" });
-    }
-
-    doc.save(`SENTINEL-${(selectedDomain ?? "Brief").replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.pdf`);
+  const loadHistoryEntry = (entry) => {
+    setSelectedDomain(entry.domain);
+    setMessages([
+      { role: "user", content: `Load briefing from ${new Date(entry.timestamp).toLocaleDateString()}`, time: getTime() },
+      { role: "bot", content: entry.content, time: getTime() },
+    ]);
+    setShowHistory(false);
+    initializedRef.current = true;
   };
 
   const showEmpty = messages.length === 0 && !isTyping;
 
   return (
-    <div className="chat-root">
+    <div className={`chat-root ${scenarioMode ? "scenario-active" : ""}`}>
 
       {/* ── Header ── */}
       <header className="chat-header">
-        <button className="back-btn" onClick={() => navigate("/")}>
-          ← Home
-        </button>
+        <button className="back-btn" onClick={() => navigate("/")}>← Home</button>
+
         <div className="chat-header-title">
           <span className="sentinel-label">SENTINEL</span>
           {selectedDomain && <span className="domain-badge">{selectedDomain}</span>}
+          {scenarioMode && <span className="scenario-badge">⚡ SCENARIO</span>}
         </div>
-        {selectedDomain && (
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="change-domain-btn" onClick={exportPDF} disabled={!messages.length}>
-              Export PDF
+
+        <div className="chat-header-actions">
+          {selectedDomain && (
+            <button
+              className={`scenario-btn ${scenarioMode ? "scenario-btn--on" : ""}`}
+              onClick={() => setScenarioMode((s) => !s)}
+              title="Toggle What If scenario mode"
+            >
+              {scenarioMode ? "⚡ Scenario On" : "⚡ What If"}
             </button>
-            <button className="change-domain-btn" onClick={changeDomain}>
-              Switch Domain
-            </button>
-          </div>
-        )}
-        {!selectedDomain && <div style={{ width: 120 }} />}
+          )}
+          <button className="history-btn" onClick={openHistory} title="Past briefings">
+            History
+          </button>
+          {selectedDomain && (
+            <button className="change-domain-btn" onClick={changeDomain}>Switch</button>
+          )}
+        </div>
       </header>
+
+      {/* Live FRED chart strip — shown for any domain that has FRED series */}
+      {selectedDomain && <DomainCharts domain={selectedDomain} />}
 
       {/* ── Messages ── */}
       <div className="chat-messages">
 
-        {/* Domain selection */}
         {!selectedDomain && (
           <div className="empty-state">
             <h3>Select a Policy Domain</h3>
@@ -237,7 +232,7 @@ export default function Chatbot() {
                   className="domain-pick-btn"
                   onClick={() => {
                     setSelectedDomain(d);
-                    sendMessageWithDomain(d, [], `Generate the daily ${d} briefing for the President.`);
+                    sendMessageWithDomain(d, [], `Generate the daily ${d} briefing for the President.`, false);
                   }}
                 >
                   {d}
@@ -250,12 +245,17 @@ export default function Chatbot() {
         {selectedDomain && showEmpty && (
           <div className="empty-state">
             <div className="pulse-ring" />
-            <h3>Generating {selectedDomain} briefing...</h3>
+            <h3>Generating {selectedDomain} briefing…</h3>
+          </div>
+        )}
+
+        {scenarioMode && messages.length > 0 && (
+          <div className="scenario-banner">
+            ⚡ SCENARIO SIMULATION MODE — Claude will analyze cascading consequences of hypotheticals
           </div>
         )}
 
         {messages.map((msg, i) => {
-          // Skip the empty streaming placeholder — typing dots show instead
           if (msg.content === "") return null;
           return (
             <div key={i} className={`msg-row ${msg.role}`}>
@@ -265,7 +265,7 @@ export default function Chatbot() {
               <div className="msg-content">
                 <div className={`msg-bubble ${msg.role === "bot" ? "msg-bubble--md" : ""}`}>
                   {msg.role === "bot"
-                    ? <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    ? <BriefingMessage content={msg.content} />
                     : msg.content}
                 </div>
                 <div className="msg-time">{msg.time}</div>
@@ -278,9 +278,7 @@ export default function Chatbot() {
           <div className="msg-row bot">
             <div className="msg-icon msg-icon--bot">AI</div>
             <div className="typing-bubble">
-              <div className="typing-dot" />
-              <div className="typing-dot" />
-              <div className="typing-dot" />
+              <div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" />
             </div>
           </div>
         )}
@@ -294,7 +292,11 @@ export default function Chatbot() {
           <textarea
             ref={textareaRef}
             className="chat-input"
-            placeholder={selectedDomain ? `Ask about ${selectedDomain}...` : "Select a domain first..."}
+            placeholder={
+              !selectedDomain ? "Select a domain first…"
+              : scenarioMode ? "Describe a hypothetical scenario…"
+              : `Ask about ${selectedDomain}…`
+            }
             value={input}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
@@ -305,14 +307,39 @@ export default function Chatbot() {
             className="send-btn"
             onClick={() => sendMessage()}
             disabled={!input.trim() || isTyping || !selectedDomain}
-          >
-            ↑
-          </button>
+          >↑</button>
         </div>
-        <div className="input-footer">
-          Enter to send · Shift+Enter for new line
-        </div>
+        <div className="input-footer">Enter to send · Shift+Enter for new line</div>
       </div>
+
+      {/* ── History Modal ── */}
+      {showHistory && (
+        <div className="history-overlay" onClick={() => setShowHistory(false)}>
+          <div className="history-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="history-modal-header">
+              <h3>Past Briefings</h3>
+              <button onClick={() => setShowHistory(false)}>✕</button>
+            </div>
+            {history.length === 0 ? (
+              <p className="history-empty">No saved briefings yet. Generate a domain briefing and it will appear here.</p>
+            ) : (
+              <div className="history-list">
+                {history.map((entry) => (
+                  <button key={entry.id} className="history-entry" onClick={() => loadHistoryEntry(entry)}>
+                    <div className="history-entry-domain">{entry.domain}</div>
+                    <div className="history-entry-date">
+                      {new Date(entry.timestamp).toLocaleDateString("en-US", {
+                        month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+                      })}
+                    </div>
+                    <div className="history-entry-preview">{entry.preview}…</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

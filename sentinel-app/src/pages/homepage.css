@@ -172,7 +172,9 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
+
 
 /* ════════════════════════════════════════
    LEFT — National Priority Alert
@@ -354,27 +356,86 @@
 .buttonContainer {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 10px;
+  margin-top: 16px;
   width: 100%;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 4px;
 }
 
+.buttonContainer::-webkit-scrollbar { width: 4px; }
+.buttonContainer::-webkit-scrollbar-track { background: transparent; }
+.buttonContainer::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
 .buttonContainer button {
-  padding: 18px 12px;
+  padding: 12px 12px 10px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: rgba(255, 255, 255, 0.95);
   font-family: "Roboto", Arial, sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
 }
 
 .buttonContainer button:hover  { transform: translateY(-2px); }
 .buttonContainer button:active { transform: translateY(0); }
+
+.btn-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+/* Threat level pills */
+.threat-pill {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.threat--low {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.threat--elevated {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.threat--high {
+  color: #f97316;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+}
+
+.threat--critical {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  animation: threatBlink 1.2s ease-in-out infinite;
+}
+
+.threat--loading {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+@keyframes threatBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
 
 .domesticPolicy_btn {
   background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
@@ -406,6 +467,30 @@
 .internationalRelation_btn:hover {
   border: 1px solid rgba(205, 41, 255, 0.35);
   box-shadow: 0 0 18px rgba(229,35,255,0.5), 0 0 35px rgba(121,0,177,0.18);
+}
+
+.energy_btn {
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+}
+.energy_btn:hover {
+  border: 1px solid rgba(255, 190, 0, 0.35);
+  box-shadow: 0 0 18px rgba(255,190,0,0.5), 0 0 35px rgba(200,120,0,0.18);
+}
+
+.healthcare_btn {
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+}
+.healthcare_btn:hover {
+  border: 1px solid rgba(0, 220, 180, 0.35);
+  box-shadow: 0 0 18px rgba(0,220,180,0.5), 0 0 35px rgba(0,140,120,0.18);
+}
+
+.technology_btn {
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+}
+.technology_btn:hover {
+  border: 1px solid rgba(0, 180, 255, 0.35);
+  box-shadow: 0 0 18px rgba(0,180,255,0.5), 0 0 35px rgba(0,80,200,0.18);
 }
 
 /* ════════════════════════════════════════
