@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prestart": "npm install",
     "start": "concurrently \"npm run dev\" \"npm run backend\"",
     "backend": "node gcp-backend/server.mjs",
     "build": "vite build",
