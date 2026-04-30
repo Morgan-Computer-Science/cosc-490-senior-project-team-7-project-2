@@ -28,9 +28,16 @@
   border-bottom: 2px solid rgb(84, 84, 84);
 }
 
-/* Left slot */
-.Logout {
+/* Left slot — wrapper for Logout + Radar buttons */
+.headerLeftActions {
   justify-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.Logout {
   width: 140px;
   height: 52px;
   padding: 0 16px;
@@ -47,6 +54,29 @@
 .Logout:hover {
   background: rgba(255, 0, 0, 0.25);
   border-color: rgb(255, 0, 0);
+}
+
+.radar-btn {
+  width: 140px;
+  height: 36px;
+  padding: 0 12px;
+  background: rgba(0, 80, 180, 0.2);
+  color: #00d4ff;
+  border-radius: 8px;
+  font-size: 11px;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  border: 1px solid rgba(0, 160, 255, 0.4);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+}
+
+.radar-btn:hover {
+  background: rgba(0, 120, 220, 0.35);
+  border-color: rgba(0, 200, 255, 0.75);
+  box-shadow: 0 0 14px rgba(0, 160, 255, 0.35);
 }
 
 /* Center slot */

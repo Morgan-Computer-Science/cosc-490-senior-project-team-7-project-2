@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import GlobalRadar from "../components/GlobalRadar";
 import "./homepage.css";
 
 const DOMAIN_BUTTONS = [
@@ -47,6 +48,7 @@ const Homepage = () => {
   const [command, setCommand] = useState("");
   const [threatLevels, setThreatLevels] = useState({});
   const [threatLoading, setThreatLoading] = useState(true);
+  const [showRadar, setShowRadar] = useState(false);
 
   useEffect(() => {
     // Use cached threats instantly if available — avoids re-calling Claude on every navigation
@@ -81,9 +83,14 @@ const Homepage = () => {
 
       {/* ── Header ── */}
       <header className="topRect">
-        <button className="Logout" type="button" onClick={() => navigate("/login")}>
-          Logout
-        </button>
+        <div className="headerLeftActions">
+          <button className="Logout" type="button" onClick={() => navigate("/login")}>
+            Logout
+          </button>
+          <button className="radar-btn" type="button" onClick={() => setShowRadar(true)}>
+            ◎ RADAR
+          </button>
+        </div>
 
         <div className="brandRow">
           <img className="homeLogo" src="/president_logo.png" alt="eagle" />
@@ -165,6 +172,7 @@ const Homepage = () => {
         </div>
 
       </main>
+      {showRadar && <GlobalRadar onClose={() => setShowRadar(false)} threatLevels={threatLevels} />}
     </div>
   );
 };
